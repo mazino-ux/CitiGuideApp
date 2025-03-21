@@ -1,10 +1,7 @@
-// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
-
+import 'package:flutter/material.dart';
 import 'package:citi_guide_app/core/services/auth_service.dart';
-import 'package:citi_guide_app/presentation/auth/forgot-password.dart';
 import 'package:citi_guide_app/widgets/custom_button.dart';
 import 'package:citi_guide_app/widgets/custom_text_field.dart';
-import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login successful!')),
+        const SnackBar(content: Text('Login successful!')),
       );
       // Navigate to home screen
     } catch (e) {
@@ -38,37 +35,35 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
+      appBar: AppBar(title: const Text('Login')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             CustomTextField(
+              key: const Key('emailField'),
               controller: _emailController,
               label: 'Email',
               icon: Icons.email,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             CustomTextField(
+              key: const Key('passwordField'),
               controller: _passwordController,
               label: 'Password',
               icon: Icons.lock,
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ForgotPassword(),
-                  ),
-                );
+                Navigator.pushNamed(context, '/forgotPassword');
               },
-              child: Text('Forgot Password?'),
+              child: const Text('Forgot Password?'),
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             CustomButton(
+              key: const Key('loginButton'),
               text: 'Login',
               onPressed: _login,
             ),

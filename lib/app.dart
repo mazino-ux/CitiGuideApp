@@ -1,4 +1,4 @@
-import 'package:citi_guide_app/presentation/auth/forgot-password.dart';
+import 'package:citi_guide_app/presentation/auth/forgot_password.dart';
 import 'package:citi_guide_app/presentation/auth/login_screen.dart';
 import 'package:citi_guide_app/presentation/auth/onboarding_screen.dart';
 import 'package:citi_guide_app/presentation/auth/register_screen.dart';
@@ -20,7 +20,7 @@ class App extends StatelessWidget {
         switch (settings.name) {
           case '/onboarding':
             return PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => OnboardingScreen(),
+              pageBuilder: (context, animation, secondaryAnimation) => const OnboardingScreen(),
               transitionsBuilder: (context, animation, secondaryAnimation, child) {
                 return FadeTransition(
                   opacity: animation,
@@ -34,7 +34,7 @@ class App extends StatelessWidget {
               transitionsBuilder: (context, animation, secondaryAnimation, child) {
                 return SlideTransition(
                   position: Tween<Offset>(
-                    begin: Offset(1.0, 0.0),
+                    begin: const Offset(1.0, 0.0),
                     end: Offset.zero,
                   ).animate(animation),
                   child: child,
@@ -48,7 +48,7 @@ class App extends StatelessWidget {
               transitionsBuilder: (context, animation, secondaryAnimation, child) {
                 return SlideTransition(
                   position: Tween<Offset>(
-                    begin: Offset(1.0, 0.0),
+                    begin: const Offset(1.0, 0.0),
                     end: Offset.zero,
                   ).animate(animation),
                   child: child,
@@ -66,7 +66,7 @@ class App extends StatelessWidget {
               },
             );
           default:
-            return MaterialPageRoute(builder: (context) => OnboardingScreen());
+            return MaterialPageRoute(builder: (context) => const OnboardingScreen());
         }
       },
     );
