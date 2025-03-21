@@ -1,6 +1,5 @@
-import 'package:citi_guide_app/presentation/auth/register_screen.dart';
-import 'package:citi_guide_app/widgets/onboarding_option_card.dart';
 import 'package:flutter/material.dart';
+import 'package:citi_guide_app/widgets/onboarding_option_card.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -13,36 +12,28 @@ class OnboardingScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               'Welcome to City Guide',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             OnboardingOptionCard(
+              key: const Key('userOption'),
               title: 'User/Tourist',
               subtitle: 'Explore the city as a user or tourist',
               icon: Icons.person,
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RegisterScreen(role: 'user'),
-                  ),
-                );
+                Navigator.pushNamed(context, '/register', arguments: 'user');
               },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             OnboardingOptionCard(
+              key: const Key('adminOption'),
               title: 'Admin',
               subtitle: 'Manage attractions and content',
               icon: Icons.admin_panel_settings,
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RegisterScreen(role: 'admin'),
-                  ),
-                );
+                Navigator.pushNamed(context, '/register', arguments: 'admin');
               },
             ),
           ],

@@ -1,9 +1,7 @@
-// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
-
+import 'package:flutter/material.dart';
 import 'package:citi_guide_app/core/services/auth_service.dart';
 import 'package:citi_guide_app/widgets/custom_button.dart';
 import 'package:citi_guide_app/widgets/custom_text_field.dart';
-import 'package:flutter/material.dart';
 
 class RegisterScreen extends StatefulWidget {
   final String role;
@@ -27,7 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         widget.role,
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registration successful!')),
+        const SnackBar(content: Text('Registration successful!')),
       );
       Navigator.pop(context); // Go back to login screen
     } catch (e) {
@@ -46,19 +44,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Column(
           children: [
             CustomTextField(
+              key: const Key('emailField'),
               controller: _emailController,
               label: 'Email',
               icon: Icons.email,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             CustomTextField(
+              key: const Key('passwordField'),
               controller: _passwordController,
               label: 'Password',
               icon: Icons.lock,
               obscureText: true,
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             CustomButton(
+              key: const Key('registerButton'),
               text: 'Register',
               onPressed: _register,
             ),

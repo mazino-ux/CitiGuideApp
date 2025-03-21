@@ -7,7 +7,6 @@ class ForgotPassword extends StatefulWidget {
   const ForgotPassword({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _ForgotPasswordState createState() => _ForgotPasswordState();
 }
 
@@ -19,7 +18,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     try {
       await _authService.resetPassword(_emailController.text);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password reset email sent!')),
+        const SnackBar(content: Text('Password reset email sent!')),
       );
       Navigator.pop(context);
     } catch (e) {
@@ -32,18 +31,20 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Forgot Password')),
+      appBar: AppBar(title: const Text('Forgot Password')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             CustomTextField(
+              key: const Key('emailField'),
               controller: _emailController,
               label: 'Email',
               icon: Icons.email,
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             CustomButton(
+              key: const Key('resetPasswordButton'),
               text: 'Reset Password',
               onPressed: _resetPassword,
             ),
