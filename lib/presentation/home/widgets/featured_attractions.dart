@@ -39,16 +39,22 @@ class FeaturedAttractions extends StatelessWidget {
                         name: 'Eiffel Tower',
                         image: 'assets/images/eiffel_tower.jpg',
                         rating: 4.8,
+                        category: 'Landmark', // Add category
+                        distance: '2.5 km', // Add distance
                       ),
                       AttractionCard(
                         name: 'Statue of Liberty',
                         image: 'assets/images/statue_of_liberty.jpg',
                         rating: 4.7,
+                        category: 'Landmark', // Add category
+                        distance: '5.0 km', // Add distance
                       ),
                       AttractionCard(
                         name: 'Shibuya Crossing',
                         image: 'assets/images/shibuya_crossing.jpg',
                         rating: 4.6,
+                        category: 'Landmark', // Add category
+                        distance: '1.2 km', // Add distance
                       ),
                     ],
                   ),

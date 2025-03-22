@@ -5,12 +5,16 @@ class AttractionCard extends StatelessWidget {
   final String name;
   final String image;
   final double rating;
+  final String category; // Add category parameter
+  final String distance; // Add distance parameter
 
   const AttractionCard({
     super.key,
     required this.name,
     required this.image,
     required this.rating,
+    required this.category, // Include in constructor
+    required this.distance, // Include in constructor
   });
 
   @override
@@ -60,6 +64,22 @@ class AttractionCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  category, // Display category
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  distance, // Display distance
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
