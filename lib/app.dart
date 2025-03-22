@@ -2,6 +2,7 @@ import 'package:citi_guide_app/presentation/auth/forgot_password.dart';
 import 'package:citi_guide_app/presentation/auth/login_screen.dart';
 import 'package:citi_guide_app/presentation/auth/onboarding_screen.dart';
 import 'package:citi_guide_app/presentation/auth/register_screen.dart';
+import 'package:citi_guide_app/presentation/home/home_screen.dart';
 import 'package:flutter/material.dart';
 
 class App extends StatelessWidget {
@@ -15,7 +16,7 @@ class App extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: '/onboarding',
+      initialRoute: '/',
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/onboarding':
@@ -66,7 +67,7 @@ class App extends StatelessWidget {
               },
             );
           default:
-            return MaterialPageRoute(builder: (context) => const OnboardingScreen());
+            return MaterialPageRoute(builder: (context) => const HomeScreen());
         }
       },
     );

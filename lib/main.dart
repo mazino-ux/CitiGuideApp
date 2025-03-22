@@ -7,8 +7,8 @@ void main() async {
 
   // Initialize Supabase
   await Supabase.initialize(
-    url: 'YOUR_SUPABASE_URL',
-    anonKey: 'YOUR_SUPABASE_ANON_KEY',
+    url: 'https://kbnfblujmhxfbanqlqpg.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtibmZibHVqbWh4ZmJhbnFscXBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI2Mjk5MTEsImV4cCI6MjA1ODIwNTkxMX0.VO_iqJB7v-zkDTMjWE3PZuszS6aLuOVW5IPPhivVIBA',
   );
 
   runApp(MyApp());
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.purple,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: App(), // Main app widget
