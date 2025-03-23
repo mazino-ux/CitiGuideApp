@@ -1,6 +1,7 @@
+import 'package:citi_guide_app/presentation/home/widgets/navbar/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:citi_guide_app/presentation/home/widgets/search_bar.dart' as custom; // Use a prefix
+import 'package:citi_guide_app/presentation/home/widgets/search_bar.dart' as custom; 
 import 'package:citi_guide_app/presentation/home/widgets/hero_section.dart';
 import 'package:citi_guide_app/presentation/home/widgets/city_listings.dart';
 import 'package:citi_guide_app/presentation/home/widgets/featured_attractions.dart';
@@ -18,16 +19,15 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   final List<Map<String, String>> _cities = [
     {'name': 'New York', 'image': 'assets/images/shot_forest.jpg', 'description': 'The Big Apple'},
-    {'name': 'Paris', 'image': 'assets/images/paris.jpg', 'description': 'City of Love'},
-    {'name': 'Tokyo', 'image': 'assets/images/tokyo.jpg', 'description': 'Land of the Rising Sun'},
+    {'name': 'Paris', 'image': 'assets/images/shot_forest.jpg', 'description': 'City of Love'},
+    {'name': 'Tokyo', 'image': 'assets/images/shot_forest.jpg', 'description': 'Land of the Rising Sun'},
   ];
   List<Map<String, String>> _filteredCities = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredCities = _cities; // Initialize with all cities
-    // Simulate data loading
+    _filteredCities = _cities; 
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
         _isLoading = false;
@@ -42,6 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
           .toList();
     });
   }
+
+  bool isAdmin = true;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
           : SingleChildScrollView(
               child: Column(
                 children: [
+                  Navbar(isAdmin: isAdmin), // ✅ Added Navbar at the top
                   // Search Bar
                   custom.SearchBar(
                     onChanged: _filterCities, // Pass the callback function
