@@ -86,21 +86,21 @@ class FeaturedAttractions extends StatelessWidget {
   static const attractions = [
     {
       'name': 'Eiffel Tower',
-      'image': 'assets/images/eiffel_tower.jpg',
+      'image': 'assets/images/shot_forest.jpg',
       'rating': 4.8,
       'category': 'Landmark',
       'distance': '2.5 km',
     },
     {
       'name': 'Statue of Liberty',
-      'image': 'assets/images/statue_of_liberty.jpg',
+      'image': 'assets/images/shot_forest.jpg',
       'rating': 4.7,
       'category': 'Landmark',
       'distance': '5.0 km',
     },
     {
       'name': 'Shibuya Crossing',
-      'image': 'assets/images/shibuya_crossing.jpg',
+      'image': 'assets/images/shot_forest.jpg',
       'rating': 4.6,
       'category': 'Landmark',
       'distance': '1.2 km',
