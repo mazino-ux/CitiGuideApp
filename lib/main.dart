@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:citi_guide_app/core/theme/theme_provider.dart';
-import 'package:citi_guide_app/app.dart'; // Import the app.dart file
+import 'package:citi_guide_app/app.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

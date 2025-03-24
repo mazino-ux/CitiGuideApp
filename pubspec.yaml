@@ -19,6 +19,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   get: ^4.6.6
   flutter_screenutil: ^5.9.3
+  smooth_page_indicator: ^1.2.1
 
 dev_dependencies:
   flutter_test:
