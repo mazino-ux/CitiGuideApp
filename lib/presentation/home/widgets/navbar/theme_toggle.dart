@@ -12,7 +12,7 @@ class ThemeToggle extends StatelessWidget {
     return IconButton(
       icon: Icon(themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode),
       onPressed: () {
-        themeProvider.toggleTheme();
+        themeProvider.toggleTheme(true);
       },
     );
   }

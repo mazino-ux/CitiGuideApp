@@ -6,7 +6,7 @@ import 'package:citi_guide_app/presentation/home/widgets/hero_section.dart';
 import 'package:citi_guide_app/presentation/home/widgets/city_listings.dart';
 import 'package:citi_guide_app/presentation/home/widgets/featured_attractions.dart';
 import 'package:citi_guide_app/presentation/home/widgets/footer.dart';
-import 'package:citi_guide_app/core/theme/app_theme.dart';
+// import 'package:citi_guide_app/core/theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: _isLoading
           ? Center(
               child: Lottie.asset(

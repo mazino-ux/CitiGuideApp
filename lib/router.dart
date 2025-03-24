@@ -1,15 +1,43 @@
-import 'package:flutter/material.dart';
+import 'package:citi_guide_app/presentation/auth/forgot_password.dart';
+import 'package:citi_guide_app/presentation/auth/login_screen.dart';
+import 'package:citi_guide_app/presentation/auth/onboarding_screen.dart';
+import 'package:citi_guide_app/presentation/auth/register_screen.dart';
 import 'package:citi_guide_app/presentation/home/home_screen.dart';
-// import 'package:citi_guide_app/presentation/screens/home_screen.dart';
-// import 'package:citi_guide_app/presentation/screens/explore_screen.dart';
-// import 'package:citi_guide_app/presentation/screens/favorites_screen.dart';
-// import 'package:citi_guide_app/presentation/screens/profile_screen.dart';
-// import 'package:citi_guide_app/presentation/screens/admin_dashboard.dart';
+import 'package:get/get.dart';
 
-Map<String, WidgetBuilder> appRoutes = {
-  "/home": (context) => const HomeScreen(),
-  // "/explore": (context) => const ExploreScreen(),
-  // "/favorites": (context) => const FavoritesScreen(),
-  // "/profile": (context) => const ProfileScreen(),
-  // "/admin": (context) => const AdminDashboard(),
-};
+class Routes {
+  static const String onboarding = '/onboarding';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String forgotPassword = '/forgotPassword';
+  static const String home = '/home';
+}
+
+class AppRoutes {
+  static final pages = [
+    GetPage(
+      name: Routes.onboarding,
+      page: () => const OnboardingScreen(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: Routes.login,
+      page: () => LoginScreen(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: Routes.register,
+      page: () => RegisterScreen(role: ''), 
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: Routes.forgotPassword,
+      page: () => ForgotPassword(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: Routes.home,
+      page: () => const HomeScreen(),
+    ),
+  ];
+}

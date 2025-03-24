@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // For environment variables
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:citi_guide_app/core/theme/theme_provider.dart';
-import 'package:citi_guide_app/presentation/home/home_screen.dart';
+import 'package:citi_guide_app/app.dart'; // Import the app.dart file
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,28 +17,17 @@ void main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
-  runApp(const MyApp());
+  runApp(const MainApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'City Guide',
-            theme: ThemeData.light(),
-            darkTheme: ThemeData.dark(),
-            themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            home: const HomeScreen(), // ✅ Uses HomeScreen
-          );
-        },
-      ),
+      child: const App(), 
     );
   }
 }

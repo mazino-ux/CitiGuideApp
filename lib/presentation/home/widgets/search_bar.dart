@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:citi_guide_app/core/theme/app_theme.dart';
+// import 'package:citi_guide_app/core/theme/app_theme.dart';
 
 class SearchBar extends StatefulWidget {
   final Function(String) onChanged;
@@ -39,13 +39,13 @@ class _SearchBarState extends State<SearchBar> {
         decoration: InputDecoration(
           hintText: _isTyping ? '' : 'Search for cities...', // Hides hint when typing
           hintStyle: const TextStyle(color: Colors.grey),
-          prefixIcon: Icon(Icons.search, color: AppTheme.primaryColor),
+          prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.primary),
           filled: false, // Ensures transparent background
           enabledBorder: const UnderlineInputBorder(
             borderSide: BorderSide(color: Colors.grey, width: 1.5),
           ),
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+            borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
         ),

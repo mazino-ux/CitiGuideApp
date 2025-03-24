@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:citi_guide_app/core/theme/app_theme.dart';
+// import 'package:citi_guide_app/core/theme/app_theme.dart';
 
 class AttractionCard extends StatelessWidget {
   final String name;
@@ -54,7 +54,7 @@ class AttractionCard extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    const Icon(Icons.star, color: AppTheme.accentColor, size: 16),
+                     Icon(Icons.star, color: Theme.of(context).colorScheme.secondary, size: 16),
                     const SizedBox(width: 4),
                     Text(
                       rating.toString(),

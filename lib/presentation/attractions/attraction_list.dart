@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:citi_guide_app/widgets/attraction_card.dart';
-import 'package:citi_guide_app/core/theme/app_theme.dart';
+// import 'package:citi_guide_app/core/theme/app_theme.dart';
 
 class AttractionListScreen extends StatefulWidget {
   const AttractionListScreen({super.key});
@@ -42,7 +42,7 @@ class _AttractionListScreenState extends State<AttractionListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Attractions'),
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Column(
         children: [

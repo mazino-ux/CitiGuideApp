@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:citi_guide_app/core/theme/app_theme.dart';
+// import 'package:citi_guide_app/core/theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Footer extends StatelessWidget {
@@ -17,7 +17,7 @@ class Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: AppTheme.primaryColor, // Using primary color from AppTheme
+      color: Theme.of(context).colorScheme.primary,
       child: Column(
         children: [
           const Text(
