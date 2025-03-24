@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:citi_guide_app/widgets/attraction_card.dart';
-import 'package:citi_guide_app/core/theme/app_theme.dart';
+// import 'package:citi_guide_app/core/theme/app_theme.dart';
 import 'package:citi_guide_app/presentation/attractions/attraction_detail.dart';
 
 class FeaturedAttractions extends StatelessWidget {
@@ -33,7 +33,7 @@ class FeaturedAttractions extends StatelessWidget {
           child: Text(
             'Featured Attractions',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: AppTheme.primaryColor,
+              color:  Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:citi_guide_app/widgets/review_card.dart';
-import 'package:citi_guide_app/core/theme/app_theme.dart';
+// import 'package:citi_guide_app/core/theme/app_theme.dart'; 
 
 class AttractionDetail extends StatefulWidget {
   final String name;
@@ -43,7 +43,7 @@ class _AttractionDetailState extends State<AttractionDetail> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.name),
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -76,7 +76,7 @@ class _AttractionDetailState extends State<AttractionDetail> {
                     children: List.generate(5, (index) {
                       return Icon(
                         index < widget.rating ? Icons.star : Icons.star_border,
-                        color: AppTheme.accentColor,
+                        color: Theme.of(context).colorScheme.secondary,
                       );
                     }),
                   ),
@@ -150,7 +150,7 @@ class _AttractionDetailState extends State<AttractionDetail> {
                       return IconButton(
                         icon: Icon(
                           index < _selectedRating ? Icons.star : Icons.star_border,
-                          color: AppTheme.accentColor,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                         onPressed: () {
                           setState(() {

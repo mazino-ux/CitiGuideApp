@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:citi_guide_app/core/theme/app_theme.dart';
+// import 'package:citi_guide_app/core/theme/app_theme.dart';
 
 class ReviewCard extends StatelessWidget {
   final String userName;
@@ -26,7 +26,7 @@ class ReviewCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.person, color: AppTheme.primaryColor),
+                Icon(Icons.person, color: Theme.of(context).colorScheme.primary,),
                 const SizedBox(width: 8),
                 Text(
                   userName,
@@ -42,7 +42,7 @@ class ReviewCard extends StatelessWidget {
               children: List.generate(5, (index) {
                 return Icon(
                   index < rating ? Icons.star : Icons.star_border,
-                  color: AppTheme.accentColor,
+                  color: Theme.of(context).colorScheme.secondary,
                 );
               }),
             ),
