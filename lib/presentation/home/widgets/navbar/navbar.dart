@@ -1,45 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:citi_guide_app/presentation/home/widgets/navbar/navbar_items.dart';
-import 'package:citi_guide_app/presentation/home/widgets/navbar/theme_toggle.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'navbar_items.dart';
+import 'theme_toggle.dart';
 
-class Navbar extends StatefulWidget {
+class Navbar extends StatelessWidget {
   final bool isAdmin;
+  const Navbar({Key? key, required this.isAdmin}) : super(key: key);
 
-  const Navbar({super.key, required this.isAdmin});
+  // Breakpoints: mobile <600, tablet 600-1099, desktop >=1100
+  static const double mobileBreakpoint = 600;
+  static const double desktopBreakpoint = 1100;
 
-  @override
-  _NavbarState createState() => _NavbarState();
-}
-
-class _NavbarState extends State<Navbar> {
-  bool _isMenuOpen = false;
-
-  void _toggleMenu() {
-    setState(() {
-      _isMenuOpen = !_isMenuOpen;
-    });
+  void _openMobileMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      builder: (_) => NavbarItems(isAdmin: isAdmin, isMobile: true),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: const Text("City Guide"),
-      backgroundColor: Theme.of(context).primaryColor,
-      actions: [
-        // Toggle Menu Button
-        IconButton(
-          icon: Icon(_isMenuOpen ? Icons.close : Icons.menu),
-          onPressed: _toggleMenu,
+    final double width = MediaQuery.of(context).size.width;
+    final bool isMobile = width < mobileBreakpoint;
+    final bool isTablet =
+        width >= mobileBreakpoint && width < desktopBreakpoint;
+
+    if (isMobile) {
+      return AppBar(
+        title: _buildTitle(isMobile: true),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        leading: IconButton(
+          icon: Icon(Icons.menu, size: 24.sp),
+          onPressed: () => _openMobileMenu(context),
         ),
-        // Theme Toggle Button
-        const ThemeToggle(),
-      ],
-      bottom: _isMenuOpen
-          ? PreferredSize(
-              preferredSize: const Size.fromHeight(200),
-              child: NavbarItems(isAdmin: widget.isAdmin),
-            )
-          : null,
+        actions: const [ThemeToggle()],
+      );
+    } else {
+      // Tablet & Desktop: a combined AppBar with title and navigation items.
+      return AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        title: Row(
+          children: [
+            _buildTitle(isMobile: false),
+            SizedBox(width: 20.w),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: NavbarItems(
+                  isAdmin: isAdmin,
+                  isMobile: false,
+                  isTablet: isTablet,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          const ThemeToggle(),
+          if (isAdmin)
+            Padding(
+              padding: EdgeInsets.only(right: 12.w),
+              child: Icon(Icons.verified_user, color: Colors.green),
+            ),
+        ],
+      );
+    }
+  }
+
+  Widget _buildTitle({required bool isMobile}) {
+    return Text(
+      "City Guide",
+      style: TextStyle(
+        fontSize: isMobile ? 20.sp : 7.sp,
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 }
