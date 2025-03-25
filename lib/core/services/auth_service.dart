@@ -63,7 +63,7 @@ class AuthService {
       email: email,
       password: password,
       role: role,
-      name: name ?? 'User', // Default name if not provided
+      name: name ?? 'User', 
     );
   }
 
