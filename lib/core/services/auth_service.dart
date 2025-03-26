@@ -4,27 +4,27 @@ class AuthService {
   final supabase = Supabase.instance.client;
 
   // Login with email and password
-  Future<User?> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await supabase.auth.signInWithPassword(
         email: email.trim(),
         password: password.trim(),
       );
-      
+
       if (response.user == null) {
-        throw Exception('Login failed - No user returned');
+        return {'success': false, 'message': 'Login failed - No user found.'};
       }
-      
-      return response.user;
+
+      return {'success': true, 'user': response.user};
     } on AuthException catch (e) {
-      throw Exception('Login error: ${e.message}');
+      return {'success': false, 'message': 'Login error: ${e.message}'};
     } catch (e) {
-      throw Exception('Login error: ${e.toString()}');
+      return {'success': false, 'message': 'Login error: ${e.toString()}'};
     }
   }
 
-  // New version with named parameters (recommended)
-  Future<User?> register({
+  // Register a new user (Auto-login after signup)
+  Future<Map<String, dynamic>> register({
     required String email,
     required String password,
     required String role,
@@ -38,9 +38,10 @@ class AuthService {
       );
 
       if (authResponse.user == null) {
-        throw Exception('Registration failed - No user returned');
+        return {'success': false, 'message': 'Registration failed. Try again.'};
       }
 
+      // Insert user details into the 'profiles' table
       await supabase.from('profiles').insert({
         'id': authResponse.user!.id,
         'email': email.trim(),
@@ -49,21 +50,23 @@ class AuthService {
         'created_at': DateTime.now().toIso8601String(),
       });
 
-      return authResponse.user;
+      // Auto-login the user immediately after registration
+      final loginResponse = await login(email, password);
+      return loginResponse;
     } on AuthException catch (e) {
-      throw Exception('Registration error: ${e.message}');
+      return {'success': false, 'message': 'Registration error: ${e.message}'};
     } catch (e) {
-      throw Exception('Registration error: ${e.toString()}');
+      return {'success': false, 'message': 'Registration error: ${e.toString()}'};
     }
   }
 
-  // Legacy version for backward compatibility
-  Future<User?> registerLegacy(String email, String password, String role, {String? name}) async {
+  // Register method for legacy systems
+  Future<Map<String, dynamic>> registerLegacy(String email, String password, String role, {String? name}) async {
     return register(
       email: email,
       password: password,
       role: role,
-      name: name ?? 'User', 
+      name: name ?? 'User',
     );
   }
 
@@ -72,7 +75,7 @@ class AuthService {
     try {
       await supabase.auth.resetPasswordForEmail(
         email.trim(),
-        redirectTo: 'app.citiguide.com/reset-password',
+        redirectTo: 'https://yourdomain.com/reset-password', // Replace with your actual frontend reset URL
       );
     } on AuthException catch (e) {
       throw Exception('Password reset error: ${e.message}');
@@ -84,7 +87,7 @@ class AuthService {
   // Get current user session
   User? get currentUser => supabase.auth.currentUser;
 
-  // Sign out
+  // Sign out user
   Future<void> signOut() async {
     try {
       await supabase.auth.signOut();
