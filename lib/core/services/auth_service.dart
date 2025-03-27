@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AuthService {
   final supabase = Supabase.instance.client;
 
-  // Login with email and password
+  // Login user with email and password (Auto-login after signup) 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await supabase.auth.signInWithPassword(
@@ -12,16 +12,22 @@ class AuthService {
       );
 
       if (response.user == null) {
-        return {'success': false, 'message': 'Login failed - No user found.'};
+        return {'success': false, 'message': 'User not found.'};
       }
 
       return {'success': true, 'user': response.user};
     } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('invalid login credentials')) {
+        return {'success': false, 'message': 'Incorrect Details!.'};
+      } else if (e.message.toLowerCase().contains('user not found')) {
+        return {'success': false, 'message': 'User not found.'};
+      }
       return {'success': false, 'message': 'Login error: ${e.message}'};
     } catch (e) {
       return {'success': false, 'message': 'Login error: ${e.toString()}'};
     }
   }
+
 
   // Register a new user (Auto-login after signup)
   Future<Map<String, dynamic>> register({
@@ -71,16 +77,18 @@ class AuthService {
   }
 
   // Send password reset email
-  Future<void> resetPassword(String email) async {
+   Future<Map<String, dynamic>> resetPassword(String email) async {
     try {
-      await supabase.auth.resetPasswordForEmail(
-        email.trim(),
-        redirectTo: 'https://yourdomain.com/reset-password', // Replace with your actual frontend reset URL
-      );
+      await supabase.auth.resetPasswordForEmail(email.trim());
+
+      return {'success': true, 'message': 'Reset link sent successfully'};
     } on AuthException catch (e) {
-      throw Exception('Password reset error: ${e.message}');
+      if (e.message.toLowerCase().contains('user not found')) {
+        return {'success': false, 'message': 'No account found with this email.'};
+      }
+      return {'success': false, 'message': 'Error: ${e.message}'};
     } catch (e) {
-      throw Exception('Password reset error: ${e.toString()}');
+      return {'success': false, 'message': 'An unexpected error occurred.'};
     }
   }
 
