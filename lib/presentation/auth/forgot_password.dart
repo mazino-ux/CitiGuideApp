@@ -14,26 +14,33 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   final _emailController = TextEditingController();
   final _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
+  
   bool _isLoading = false;
   bool _emailSent = false;
+  String? _errorMessage;
 
   Future<void> _resetPassword() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    setState(() => _isLoading = true);
-    
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
-      await _authService.resetPassword(_emailController.text.trim());
-      setState(() => _emailSent = true);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      final result = await _authService.resetPassword(_emailController.text.trim());
+
+      if (mounted) {
+        if (result['success']) {
+          setState(() => _emailSent = true);
+        } else {
+          setState(() => _errorMessage = result['message']);
+        }
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -41,38 +48,41 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Forgot Password'),
+        title: const Text(
+          'Forgot Password',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
+      body: Center(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
                 if (!_emailSent) ...[
+                  const Icon(Icons.lock_reset, size: 80, color: Colors.blue),
+                  const SizedBox(height: 20),
                   const Text(
-                    'Reset Password',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    'Reset Your Password',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Enter your email to receive a password reset link',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    'Enter your email below and we\'ll send you a link to reset your password.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 30),
+                  
                   CustomTextField(
                     controller: _emailController,
                     label: 'Email Address',
@@ -87,39 +97,40 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 10),
+
+                  if (_errorMessage != null) ...[
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+
                   CustomButton(
                     text: 'Send Reset Link',
                     onPressed: _resetPassword,
                     isLoading: _isLoading,
                   ),
                 ] else ...[
-                  const Icon(
-                    Icons.check_circle_outline,
-                    size: 80,
-                    color: Colors.green,
-                  ),
+                  const Icon(Icons.check_circle, size: 80, color: Colors.green),
                   const SizedBox(height: 20),
                   const Text(
                     'Email Sent!',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   const Text(
-                    'Check your email for a password reset link. If you don\'t see it, please check your spam folder.',
+                    'Check your inbox for the password reset link. If you don’t see it, check your spam folder.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16),
                   ),
                   const SizedBox(height: 30),
+                  
                   CustomButton(
                     text: 'Back to Login',
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ],
