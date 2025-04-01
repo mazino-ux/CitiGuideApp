@@ -23,7 +23,7 @@ class FeaturedAttractions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = screenWidth * 0.7; // 70% of screen width
+    final cardWidth = screenWidth * 0.7; 
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,7 +39,7 @@ class FeaturedAttractions extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 250, // Fixed height for consistency
+          height: 250, 
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             scrollDirection: Axis.horizontal,
