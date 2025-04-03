@@ -1,6 +1,9 @@
+import 'package:citi_guide_app/controllers/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:citi_guide_app/core/theme/theme_provider.dart';
@@ -17,6 +20,8 @@ void main() async {
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
+  await GetStorage.init();
+  Get.put(ThemeController());
 
   runApp(const MainApp());
 }
@@ -28,7 +33,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(360, 690),
-      minTextAdapt: true,
+      minTextAdapt: false,
       splitScreenMode: true,
       builder: (_, child) {
         return ChangeNotifierProvider(
