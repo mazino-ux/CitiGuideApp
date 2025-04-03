@@ -1,3 +1,4 @@
+import 'package:citi_guide_app/presentation/admin/admin_dashboard.dart';
 import 'package:citi_guide_app/presentation/auth/forgot_password.dart';
 import 'package:citi_guide_app/presentation/auth/login_screen.dart';
 import 'package:citi_guide_app/presentation/auth/onboarding_screen.dart';
@@ -13,6 +14,7 @@ class Routes {
   static const String register = '/register';
   static const String forgotPassword = '/forgotPassword';
   static const String home = '/home';
+  static const String adminDashboard = '/adminDashboard';
 }
 
 class AppRoutes {
@@ -45,6 +47,11 @@ class AppRoutes {
     GetPage(
       name: Routes.home,
       page: () => const HomeScreen(),
+    ),
+    GetPage(
+      name: Routes.adminDashboard,
+      page: () => const AdminDashboard(),
+      transition: Transition.fadeIn,
     ),
   ];
 }

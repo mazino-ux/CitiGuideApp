@@ -19,25 +19,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
-      await _authService.login(
+      final result = await _authService.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (result['success']) {
+          // Redirect only if login is successful
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) {
@@ -46,6 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+
+
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
