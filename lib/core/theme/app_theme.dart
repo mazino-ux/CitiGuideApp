@@ -11,7 +11,6 @@ class AppTheme {
   static const Color darkBackground = Color(0xFF121212);
   static const Color darkAccent = Color(0xFF03DAC6); 
 
-  // Make colors context-aware (optional)
   static Color primaryColor(BuildContext context) => 
       Theme.of(context).brightness == Brightness.dark ? darkPrimary : lightPrimary;
   
