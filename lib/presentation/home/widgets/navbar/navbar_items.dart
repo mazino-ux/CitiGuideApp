@@ -7,11 +7,11 @@ class NavbarItems extends StatelessWidget {
   final bool isTablet;
 
   const NavbarItems({
-    Key? key,
+    super.key,
     required this.isAdmin,
     required this.isMobile,
     this.isTablet = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -81,13 +81,13 @@ class _NavItem extends StatelessWidget {
   final bool isHighlighted;
 
   const _NavItem({
-    Key? key,
+    // super.key,
     required this.icon,
     required this.label,
     required this.route,
     this.isMobile = false,
     this.isHighlighted = false,
-  }) : super(key: key);
+  });
 
   void _navigate(BuildContext context) {
     Navigator.pushNamed(context, route);

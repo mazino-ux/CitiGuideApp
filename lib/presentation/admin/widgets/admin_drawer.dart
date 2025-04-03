@@ -1,8 +1,34 @@
+import 'package:citi_guide_app/presentation/admin/admin_dashboard.dart';
+import 'package:citi_guide_app/presentation/admin/screens/attractions.dart';
+import 'package:citi_guide_app/presentation/home/home_screen.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter/widgets.dart';
+// import 'dashboard_screen.dart';
+// import 'attractions.dart';
+// import 'users_screen.dart';
+// import 'reviews_screen.dart';
+// import 'settings_screen.dart';
+// import 'help_screen.dart';
 
-class AdminDrawer extends StatelessWidget {
+class AdminDrawer extends StatefulWidget {
   const AdminDrawer({super.key});
+
+  @override
+  _AdminDrawerState createState() => _AdminDrawerState();
+}
+
+class _AdminDrawerState extends State<AdminDrawer> {
+  String selectedItem = 'Dashboard'; // Keeps track of the selected item
+
+  void _navigateTo(BuildContext context, String title, Widget screen) {
+    setState(() {
+      selectedItem = title; // Update the selected item
+    });
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,43 +60,48 @@ class AdminDrawer extends StatelessWidget {
                 Text(
                   'admin@cityguide.com',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimary..withAlpha(230),
+                    color: Theme.of(context).colorScheme.onPrimary.withAlpha(230),
                   ),
                 ),
               ],
             ),
           ),
           _DrawerItem(
+            icon: Icons.home,
+            title: 'Home',
+            isSelected: selectedItem == 'Home',
+            onTap: () => _navigateTo(context, 'Home', const HomeScreen()),
+          ),
+          _DrawerItem(
             icon: Icons.dashboard,
             title: 'Dashboard',
-            onTap: () {},
-            isSelected: true,
+            isSelected: selectedItem == 'Dashboard',
+            onTap: () => _navigateTo(context, 'Dashboard', const AdminDashboard()),
           ),
           _DrawerItem(
             icon: Icons.place,
             title: 'Attractions',
-            onTap: () {},
-          ),
-          _DrawerItem(
-            icon: Icons.people,
-            title: 'Users',
-            onTap: () {},
+            isSelected: selectedItem == 'Attractions',
+            onTap: () => _navigateTo(context, 'Attractions', const AttractionsScreen()),
           ),
           _DrawerItem(
             icon: Icons.reviews,
             title: 'Reviews',
-            onTap: () {},
+            isSelected: selectedItem == 'Reviews',
+            onTap: () => _navigateTo(context, 'Reviews', const AttractionsScreen()),
           ),
           _DrawerItem(
             icon: Icons.settings,
             title: 'Settings',
-            onTap: () {},
+            isSelected: selectedItem == 'Settings',
+            onTap: () => _navigateTo(context, 'Settings', const AttractionsScreen()),
           ),
           const Divider(),
           _DrawerItem(
             icon: Icons.help,
             title: 'Help & Support',
-            onTap: () {},
+            isSelected: selectedItem == 'Help & Support',
+            onTap: () => _navigateTo(context, 'Help & Support', const AttractionsScreen()),
           ),
         ],
       ),
@@ -96,7 +127,7 @@ class _DrawerItem extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: isSelected 
+        color: isSelected
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.onSurface.withAlpha(200),
       ),
@@ -104,7 +135,7 @@ class _DrawerItem extends StatelessWidget {
         title,
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected 
+          color: isSelected
               ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.onSurface,
         ),

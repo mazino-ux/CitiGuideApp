@@ -56,7 +56,7 @@ class HeroSection extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Container(color: Colors.black.withOpacity(0.3)),
+          Container(color: Colors.black.withAlpha(80)),
           Positioned(
             top: 10.h,
             left: 10.w,
@@ -192,7 +192,7 @@ class HeroSection extends StatelessWidget {
                               ),
                               Positioned.fill(
                                 child: Container(
-                                    color: Colors.black.withOpacity(0.5)),
+                                    color: Colors.black.withAlpha(128)),
                               ),
                               Align(
                                 alignment: Alignment.bottomCenter,
