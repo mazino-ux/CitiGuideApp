@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:citi_guide_app/widgets/city_card.dart';
-// import 'package:citi_guide_app/core/theme/app_theme.dart';
+import 'package:citi_guide_app/models/city.dart';
 
 class CityListings extends StatelessWidget {
-  final List<Map<String, String>> cities;
+  final List<City> cities;
+  final Function(City) onCityTap;
+  final Function(City) onCityEdit;
+  final Function(City) onCityDelete;
 
-  const CityListings({super.key, required this.cities});
+  const CityListings({
+    super.key, 
+    required this.cities,
+    required this.onCityTap,
+    required this.onCityEdit,
+    required this.onCityDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +23,8 @@ class CityListings extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               'Explore Cities',
               style: TextStyle(
@@ -34,15 +43,17 @@ class CityListings extends StatelessWidget {
               child: SlideAnimation(
                 horizontalOffset: 50.0,
                 child: FadeInAnimation(
-                  child: ListView(
+                  child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    children: cities.map((city) {
+                    itemCount: cities.length,
+                    itemBuilder: (context, index) {
                       return CityCard(
-                        city: city['name']!,
-                        image: city['image']!,
-                        description: city['description']!,
+                        city: cities[index],
+                        onTap: () => onCityTap(cities[index]),
+                        onEdit: () => onCityEdit(cities[index]),
+                        onDelete: () => onCityDelete(cities[index]),
                       );
-                    }).toList(),
+                    },
                   ),
                 ),
               ),

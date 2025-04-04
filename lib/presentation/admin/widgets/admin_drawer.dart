@@ -1,27 +1,24 @@
 import 'package:citi_guide_app/presentation/admin/admin_dashboard.dart';
+import 'package:citi_guide_app/presentation/admin/screens/cities_screen.dart'; // Add this import
 import 'package:citi_guide_app/presentation/admin/screens/attractions.dart';
 import 'package:citi_guide_app/presentation/home/home_screen.dart';
 import 'package:flutter/material.dart';
-// import 'dashboard_screen.dart';
-// import 'attractions.dart';
-// import 'users_screen.dart';
-// import 'reviews_screen.dart';
-// import 'settings_screen.dart';
-// import 'help_screen.dart';
 
 class AdminDrawer extends StatefulWidget {
-  const AdminDrawer({super.key});
+  final String? currentCityId; 
+
+  const AdminDrawer({super.key, this.currentCityId});
 
   @override
   _AdminDrawerState createState() => _AdminDrawerState();
 }
 
 class _AdminDrawerState extends State<AdminDrawer> {
-  String selectedItem = 'Dashboard'; // Keeps track of the selected item
+  String selectedItem = 'Dashboard';
 
   void _navigateTo(BuildContext context, String title, Widget screen) {
     setState(() {
-      selectedItem = title; // Update the selected item
+      selectedItem = title;
     });
 
     Navigator.pushReplacement(
@@ -79,29 +76,67 @@ class _AdminDrawerState extends State<AdminDrawer> {
             onTap: () => _navigateTo(context, 'Dashboard', const AdminDashboard()),
           ),
           _DrawerItem(
+            icon: Icons.location_city,
+            title: 'Cities',
+            isSelected: selectedItem == 'Cities',
+            onTap: () => _navigateTo(context, 'Cities', const CitiesScreen()),
+          ),
+          _DrawerItem(
             icon: Icons.place,
             title: 'Attractions',
             isSelected: selectedItem == 'Attractions',
-            onTap: () => _navigateTo(context, 'Attractions', const AttractionsScreen()),
+            onTap: () {
+              if (widget.currentCityId != null) {
+                _navigateTo(
+                  context, 
+                  'Attractions', 
+                  AttractionsScreen(cityId: widget.currentCityId!)
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please select a city first')),
+                );
+                // Optionally navigate to CitiesScreen
+                _navigateTo(context, 'Cities', const CitiesScreen());
+              }
+            },
           ),
           _DrawerItem(
             icon: Icons.reviews,
             title: 'Reviews',
             isSelected: selectedItem == 'Reviews',
-            onTap: () => _navigateTo(context, 'Reviews', const AttractionsScreen()),
+            onTap: () {
+              // You'll need to implement ReviewsScreen
+              // _navigateTo(context, 'Reviews', const ReviewsScreen());
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Reviews screen coming soon')),
+              );
+            },
           ),
           _DrawerItem(
             icon: Icons.settings,
             title: 'Settings',
             isSelected: selectedItem == 'Settings',
-            onTap: () => _navigateTo(context, 'Settings', const AttractionsScreen()),
+            onTap: () {
+              // You'll need to implement SettingsScreen
+              // _navigateTo(context, 'Settings', const SettingsScreen());
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Settings screen coming soon')),
+              );
+            },
           ),
           const Divider(),
           _DrawerItem(
             icon: Icons.help,
             title: 'Help & Support',
             isSelected: selectedItem == 'Help & Support',
-            onTap: () => _navigateTo(context, 'Help & Support', const AttractionsScreen()),
+            onTap: () {
+              // You'll need to implement HelpScreen
+              // _navigateTo(context, 'Help & Support', const HelpScreen());
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Help screen coming soon')),
+              );
+            },
           ),
         ],
       ),
