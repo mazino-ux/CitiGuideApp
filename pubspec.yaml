@@ -1,5 +1,5 @@
 name: citi_guide_app
-description: "A new Flutter project."
+description: A new Flutter project.
 publish_to: 'none'
 version: 0.1.0
 
@@ -25,8 +25,6 @@ dependencies:
   image_picker: ^1.1.2
   path: ^1.9.0
   cached_network_image: ^3.4.1
-  get_storage: ^2.1.1
-  flutter_rating_bar: ^4.0.1
 
 dev_dependencies:
   flutter_test:
@@ -41,4 +39,3 @@ flutter:
     - assets/lottie/loading.json
     - assets/fonts/
     - .env
-  
