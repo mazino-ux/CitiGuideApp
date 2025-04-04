@@ -5,7 +5,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 class CityScreen extends StatelessWidget {
   final Map<String, dynamic> city;
 
-  const CityScreen({Key? key, required this.city}) : super(key: key);
+  const CityScreen({super.key, required this.city});
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,7 @@ class CityScreen extends StatelessWidget {
                     padding:
                         EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withAlpha(176),
                       borderRadius: BorderRadius.circular(6.r),
                     ),
                     child: Text(

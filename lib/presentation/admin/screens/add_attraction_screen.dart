@@ -8,7 +8,9 @@ import 'package:path/path.dart' as p;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddAttractionScreen extends StatefulWidget {
-  const AddAttractionScreen({super.key});
+  final String cityId;
+
+  const AddAttractionScreen({super.key, required this.cityId});
 
   @override
   State<AddAttractionScreen> createState() => _AddAttractionScreenState();
@@ -117,6 +119,7 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
       final imageUrl = await _uploadImage();
 
       final attractionData = {
+        'city_id': widget.cityId, // Add city_id
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
         'location': _locationController.text.trim(),
@@ -175,7 +178,7 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
               _buildImagePicker(),
               const SizedBox(height: 24),
               
-              // Form Fields
+              // Form Fields  
               _buildTextField(
                 controller: _nameController,
                 label: 'Attraction Name',

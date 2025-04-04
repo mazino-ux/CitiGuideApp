@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 class ExploreScreen extends StatefulWidget {
   final List<Map<String, String>> cities;
 
-  const ExploreScreen({Key? key, required this.cities}) : super(key: key);
+  const ExploreScreen({super.key, required this.cities});
 
   @override
   State<ExploreScreen> createState() => _ExploreScreenState();
@@ -87,7 +87,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.black.withOpacity(0.5),
+                            Colors.black.withAlpha(128),
                             Colors.transparent
                           ],
                           begin: Alignment.bottomCenter,
@@ -106,7 +106,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             horizontal: isDesktop ? 10.w : 8.w,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withAlpha(135),
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
