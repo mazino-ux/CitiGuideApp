@@ -1,3 +1,4 @@
+import 'package:citi_guide_app/controllers/theme_controller.dart';
 import 'package:citi_guide_app/core/theme/app_theme.dart';
 import 'package:citi_guide_app/core/theme/theme_provider.dart';
 import 'package:citi_guide_app/router.dart';
@@ -10,17 +11,15 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>( 
-      builder: (context, themeProvider, child){
-        return GetMaterialApp(
+    return Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+      return GetMaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        themeMode: themeProvider.themeMode,
+        themeMode: ThemeController.to.themeMode,
         initialRoute: Routes.onboarding,
         getPages: AppRoutes.pages,
       );
-    }
-    );
+    });
   }
 }

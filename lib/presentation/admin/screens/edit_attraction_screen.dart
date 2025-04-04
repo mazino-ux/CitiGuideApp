@@ -1,0 +1,413 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+// import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+
+class EditAttractionScreen extends StatefulWidget {
+  final Map<String, dynamic> attraction;
+
+  const EditAttractionScreen({super.key, required this.attraction});
+
+  @override
+  State<EditAttractionScreen> createState() => _EditAttractionScreenState();
+}
+
+class _EditAttractionScreenState extends State<EditAttractionScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _supabase = Supabase.instance.client;
+  final _picker = ImagePicker();
+
+  dynamic _imageFile;
+  Uint8List? _imageBytes;
+  bool _isLoading = false;
+  bool _isFeatured = false;
+
+  // Controllers
+  late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _locationController;
+  late final TextEditingController _priceController;
+  late final TextEditingController _categoryController;
+  late final TextEditingController _hoursController;
+  late final TextEditingController _websiteController;
+  late final TextEditingController _phoneController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.attraction['name']);
+    _descriptionController = TextEditingController(text: widget.attraction['description']);
+    _locationController = TextEditingController(text: widget.attraction['location']);
+    _priceController = TextEditingController(text: widget.attraction['price']?.toString());
+    _categoryController = TextEditingController(text: widget.attraction['category']);
+    _hoursController = TextEditingController(text: widget.attraction['opening_hours']);
+    _websiteController = TextEditingController(text: widget.attraction['website']);
+    _phoneController = TextEditingController(text: widget.attraction['phone']);
+    _isFeatured = widget.attraction['is_featured'] ?? false;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    _priceController.dispose();
+    _categoryController.dispose();
+    _hoursController.dispose();
+    _websiteController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile == null) return;
+
+      if (kIsWeb) {
+        final bytes = await pickedFile.readAsBytes();
+        setState(() {
+          _imageFile = pickedFile;
+          _imageBytes = bytes;
+        });
+      } else {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<String?> _uploadImage() async {
+    if (_imageFile == null) return null;
+
+    final fileExtension = kIsWeb ? '.jpg' : '.${_imageFile.path.split('.').last}';
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}$fileExtension';
+    final filePath = 'attractions/$fileName';
+
+    try {
+      if (kIsWeb) {
+        await _supabase.storage
+            .from('attractions')
+            .uploadBinary(filePath, _imageBytes!);
+      } else {
+        await _supabase.storage
+            .from('attractions')
+            .upload(filePath, _imageFile);
+      }
+      return _supabase.storage.from('attractions').getPublicUrl(filePath);
+    } catch (e) {
+      throw Exception('Failed to upload image: ${e.toString()}');
+    }
+  }
+
+  Future<void> _updateAttraction() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      String? imageUrl;
+      if (_imageFile != null) {
+        imageUrl = await _uploadImage();
+      }
+
+      final attractionData = {
+        'name': _nameController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'location': _locationController.text.trim(),
+        'price': double.tryParse(_priceController.text.trim()) ?? 0.0,
+        'category': _categoryController.text.trim(),
+        'opening_hours': _hoursController.text.trim(),
+        'website': _websiteController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'is_featured': _isFeatured,
+        if (imageUrl != null) 'image_url': imageUrl,
+      };
+
+      await _supabase
+          .from('attractions')
+          .update(attractionData)
+          .eq('id', widget.attraction['id']);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Attraction updated successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Attraction'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _isLoading ? null : _updateAttraction,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Image Picker Section
+              _buildImagePicker(),
+              const SizedBox(height: 24),
+              
+              // Featured Toggle
+              SwitchListTile(
+                title: const Text('Featured Attraction'),
+                value: _isFeatured,
+                onChanged: (value) => setState(() => _isFeatured = value),
+              ),
+              const SizedBox(height: 16),
+              
+              // Form Fields (same as AddAttractionScreen)
+              _buildTextField(
+                controller: _nameController,
+                label: 'Attraction Name',
+                icon: Icons.place,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter attraction name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              _buildTextField(
+                controller: _descriptionController,
+                label: 'Description',
+                icon: Icons.description,
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter description';
+                  }
+                  if (value.length < 30) {
+                    return 'Description should be at least 30 characters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              _buildTextField(
+                controller: _locationController,
+                label: 'Location',
+                icon: Icons.location_on,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter location';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _priceController,
+                      label: 'Price (\$)',
+                      icon: Icons.attach_money,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter price';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _categoryController,
+                      label: 'Category',
+                      icon: Icons.category,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter category';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              _buildTextField(
+                controller: _hoursController,
+                label: 'Opening Hours',
+                icon: Icons.access_time,
+                hintText: 'e.g. 9:00 AM - 5:00 PM',
+              ),
+              const SizedBox(height: 16),
+              
+              _buildTextField(
+                controller: _websiteController,
+                label: 'Website',
+                icon: Icons.public,
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 16),
+              
+              _buildTextField(
+                controller: _phoneController,
+                label: 'Phone Number',
+                icon: Icons.phone,
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 32),
+              
+              ElevatedButton(
+                onPressed: _isLoading ? null : _updateAttraction,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Update Attraction',
+                        style: TextStyle(fontSize: 16),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Attraction Image',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: _pickImage,
+          child: Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withAlpha(120),
+              ),
+            ),
+            child: _imageFile != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: kIsWeb
+                        ? Image.memory(_imageBytes!, fit: BoxFit.cover)
+                        : Image.file(_imageFile!, fit: BoxFit.cover),
+                  )
+                : widget.attraction['image_url'] != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: CachedNetworkImage(
+                          imageUrl: widget.attraction['image_url'],
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[200],
+                            child: const Center(child: CircularProgressIndicator()),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.broken_image),
+                          ),
+                        ),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_photo_alternate,
+                            size: 48,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tap to change image',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hintText,
+    int? maxLines = 1,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      validator: validator,
+    );
+  }
+}
