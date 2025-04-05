@@ -18,17 +18,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
 
-  List<Map<String, String>> _filteredCities = [];
-  Map<String, String>? _selectedCity;
+  List<Map<String, dynamic>> _filteredCities = [];
+  Map<String, dynamic>? _selectedCity;
 
   @override
   void initState() {
     super.initState();
 
-    _filteredCities = cities
-        .map(
-            (city) => city.map((key, value) => MapEntry(key, value.toString())))
-        .toList();
+    _filteredCities = List.from(cities);
     _selectedCity = _filteredCities.isNotEmpty ? _filteredCities[0] : null;
 
     Future.delayed(const Duration(seconds: 2), () {
@@ -41,10 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _filterCities(String query) {
     setState(() {
       _filteredCities = cities
-          .map((city) =>
-              city.map((key, value) => MapEntry(key, value.toString())))
-          .where((city) =>
-              city['name']!.toLowerCase().contains(query.toLowerCase()))
+          .where((city) => city['name']
+              .toString()
+              .toLowerCase()
+              .contains(query.toLowerCase()))
           .toList();
 
       if (!_filteredCities.contains(_selectedCity)) {
@@ -53,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _onCitySelected(Map<String, String> city) {
+  void _onCitySelected(Map<String, dynamic> city) {
     setState(() {
       _selectedCity = city;
     });
@@ -82,12 +79,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
-        child: GestureDetector( // Wrap the Navbar with GestureDetector
+        child: GestureDetector(
           onTap: _openSearch,
           child: Navbar(isAdmin: isAdmin),
         ),
       ),
-      // Add a search bar to the app bar 
       body: _isLoading
           ? Center(
               child: Lottie.asset(
@@ -104,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       city: _selectedCity!['name']!,
                       image: _selectedCity!['image']!,
                       description: _selectedCity!['description']!,
-                      cities: _filteredCities, // Pass converted cities
+                      cities: _filteredCities,
                       onCitySelected: _onCitySelected,
                     ),
                   SizedBox(height: 20.h),
