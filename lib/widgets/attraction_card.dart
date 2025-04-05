@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class AttractionCard extends StatelessWidget {
@@ -19,9 +20,43 @@ class AttractionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Define scale factors
+    double cardWidth;
+    double titleFontSize;
+    double ratingFontSize;
+    double iconSize;
+
+    if (screenWidth >= 1024) {
+      // Desktop
+      cardWidth = 100.w;
+      titleFontSize = 6.sp;
+      ratingFontSize = 6.sp;
+      iconSize = 7.sp;
+    } else if (screenWidth >= 600) {
+      // Tablet
+      cardWidth = 120.w;
+      titleFontSize = 10.sp;
+      ratingFontSize = 10.sp;
+      iconSize = 12.sp;
+    } else {
+      // Mobile
+      cardWidth = 150.w;
+      titleFontSize = 16.sp;
+      ratingFontSize = 14.sp;
+      iconSize = 14.sp;
+    }
+
+    return Container(
+      width: cardWidth,
+      margin: EdgeInsets.symmetric(horizontal: 8.w),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.r),
+        image: DecorationImage(
+          image: AssetImage(image),
+          fit: BoxFit.cover,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,12 +90,12 @@ class AttractionCard extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: titleFontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -91,11 +126,18 @@ class AttractionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.star, size: 14, color: Colors.amber),
-                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.star,
+                      color: Theme.of(context).colorScheme.secondary,
+                      size: iconSize,
+                    ),
+                    SizedBox(width: 4.w),
                     Text(
-                      rating.toStringAsFixed(1),
-                      style: const TextStyle(fontSize: 12),
+                      rating.toString(),
+                      style: TextStyle(
+                        fontSize: ratingFontSize,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),

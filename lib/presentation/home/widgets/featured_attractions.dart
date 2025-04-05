@@ -178,6 +178,7 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
                   ),
                 ),
               ),
+
             ),
           ),
         );
@@ -185,3 +186,4 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
     );
   }
 }
+
