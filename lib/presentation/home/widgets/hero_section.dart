@@ -1,4 +1,4 @@
-import 'package:citi_guide_app/presentation/explore/explore_screen.dart';
+import 'package:citi_guide_app/presentation/explore/city_details_screen.dart';
 import 'package:citi_guide_app/presentation/home/widgets/search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,8 +8,8 @@ class HeroSection extends StatelessWidget {
   final String city;
   final String image;
   final String description;
-  final List<Map<String, String>> cities;
-  final Function(Map<String, String>) onCitySelected;
+  final List<Map<String, dynamic>> cities;
+  final Function(Map<String, dynamic>) onCitySelected;
 
   const HeroSection({
     super.key,
@@ -217,8 +217,8 @@ class HeroSection extends StatelessWidget {
                                       ),
                                       InkWell(
                                         onTap: () {
-                                          Get.to(() => ExploreScreen(
-                                                cities: cities,
+                                          Get.to(() => CityScreen(
+                                                city: c,
                                               ));
                                         },
                                         child: Icon(
