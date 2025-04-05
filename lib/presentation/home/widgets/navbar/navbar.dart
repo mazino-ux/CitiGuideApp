@@ -5,7 +5,9 @@ import 'theme_toggle.dart';
 
 class Navbar extends StatelessWidget {
   final bool isAdmin;
-  const Navbar({super.key, required this.isAdmin});
+  final List<Map<String, dynamic>> cities;
+
+  const Navbar({super.key, required this.isAdmin, required this.cities});
 
   // Breakpoints: mobile <600, tablet 600-1099, desktop >=1100
   static const double mobileBreakpoint = 600;
@@ -15,7 +17,7 @@ class Navbar extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).cardColor,
-      builder: (_) => NavbarItems(isAdmin: isAdmin, isMobile: true),
+      builder: (_) => NavbarItems(isAdmin: isAdmin, isMobile: true, cities: cities,),
     );
   }
 
@@ -49,6 +51,7 @@ class Navbar extends StatelessWidget {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: NavbarItems(
+                  cities: cities,
                   isAdmin: isAdmin,
                   isMobile: false,
                   isTablet: isTablet,

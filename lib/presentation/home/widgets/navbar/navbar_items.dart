@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
 class NavbarItems extends StatelessWidget {
   final bool isAdmin;
   final bool isMobile;
   final bool isTablet;
+  final List<Map<String, dynamic>> cities;
 
   const NavbarItems({
     super.key,
     required this.isAdmin,
     required this.isMobile,
     this.isTablet = false,
+    required this.cities,
   });
 
   @override
@@ -40,6 +43,7 @@ class NavbarItems extends StatelessWidget {
         label: "Explore",
         route: "/explore",
         isMobile: isMobile,
+        arguments: cities,
       ),
       SizedBox(width: 8.w),
       _NavItem(
@@ -63,7 +67,7 @@ class NavbarItems extends StatelessWidget {
         _NavItem(
           icon: Icons.dashboard,
           label: isTablet ? "Admin" : "Admin Dashboard",
-          route: "/admin",
+          route: "/dashboard",
           isMobile: isMobile,
           isHighlighted: true,
         ),
@@ -79,6 +83,7 @@ class _NavItem extends StatelessWidget {
   final String route;
   final bool isMobile;
   final bool isHighlighted;
+  final dynamic arguments;
 
   const _NavItem({
     // super.key,
@@ -87,10 +92,11 @@ class _NavItem extends StatelessWidget {
     required this.route,
     this.isMobile = false,
     this.isHighlighted = false,
+    this.arguments,
   });
 
   void _navigate(BuildContext context) {
-    Navigator.pushNamed(context, route);
+    Get.toNamed(route, arguments: arguments);
     if (isMobile) Navigator.pop(context);
   }
 
