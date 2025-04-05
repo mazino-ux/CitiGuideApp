@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 class ExploreScreen extends StatefulWidget {
-  final List<Map<String, String>> cities;
+  final List<Map<String, dynamic>> cities;
 
   const ExploreScreen({super.key, required this.cities});
 
