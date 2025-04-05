@@ -14,7 +14,7 @@ class QuickActionsGrid extends StatelessWidget {
       'title': 'Add Attraction',
       'icon': Icons.add_location_alt,
       'color': Colors.blue,
-      'route': AddAttractionScreen(),
+      'route': AddAttractionScreen(cityId: '',),
     },
     {
       'title': 'Manage Users',

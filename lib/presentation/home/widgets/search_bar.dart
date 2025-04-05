@@ -21,7 +21,7 @@ class HomeSearchBar extends SearchDelegate<String> {
     final ThemeData theme = Theme.of(context);
     return theme.copyWith(
       appBarTheme: AppBarTheme(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withAlpha(165),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       inputDecorationTheme: InputDecorationTheme(

@@ -82,8 +82,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
-        child: Navbar(isAdmin: isAdmin),
+        child: GestureDetector( // Wrap the Navbar with GestureDetector
+          onTap: _openSearch,
+          child: Navbar(isAdmin: isAdmin),
+        ),
       ),
+      // Add a search bar to the app bar 
       body: _isLoading
           ? Center(
               child: Lottie.asset(

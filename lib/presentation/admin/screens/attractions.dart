@@ -5,13 +5,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class AttractionsScreen extends StatefulWidget {
-  const AttractionsScreen({super.key});
+  final String cityId;
+  const AttractionsScreen({super.key, required this.cityId});
 
   @override
   State<AttractionsScreen> createState() => _AttractionsScreenState();
 }
 
-class _AttractionsScreenState extends State<AttractionsScreen> {
+
+  class _AttractionsScreenState extends State<AttractionsScreen> {
+  late String currentCityId;
   final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _attractions = [];
   bool _isLoading = true;
@@ -20,6 +23,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
   @override
   void initState() {
     super.initState();
+    currentCityId = widget.cityId; // Assign cityId from the widget
     _fetchAttractions();
   }
 
@@ -33,6 +37,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
       final response = await _supabase
           .from('attractions')
           .select('*')
+          .eq('city_id', currentCityId) // Fetch attractions based on cityId
           .order('created_at', ascending: false);
 
       setState(() {
@@ -51,6 +56,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
       }
     }
   }
+
 
   Future<void> _deleteAttraction(String id) async {
     try {
@@ -105,7 +111,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const AddAttractionScreen(),
+                  builder: (context) => const AddAttractionScreen(cityId: '',),
                 ),
               );
               _fetchAttractions();
@@ -154,12 +160,16 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
             const Text('No attractions found'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddAttractionScreen(),
-                ),
-              ),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddAttractionScreen(cityId: currentCityId),
+                  ),
+                );
+                _fetchAttractions();
+              },
+
               child: const Text('Add First Attraction'),
             ),
           ],

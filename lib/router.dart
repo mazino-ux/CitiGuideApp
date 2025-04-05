@@ -1,4 +1,6 @@
 import 'package:citi_guide_app/presentation/admin/admin_dashboard.dart';
+import 'package:citi_guide_app/presentation/admin/screens/attractions.dart';
+import 'package:citi_guide_app/presentation/admin/screens/cities_screen.dart';
 import 'package:citi_guide_app/presentation/auth/forgot_password.dart';
 import 'package:citi_guide_app/presentation/auth/login_screen.dart';
 import 'package:citi_guide_app/presentation/auth/onboarding_screen.dart';
@@ -52,6 +54,18 @@ class AppRoutes {
       name: Routes.adminDashboard,
       page: () => const AdminDashboard(),
       transition: Transition.fadeIn,
+    ),
+        // Update your router to include the CitiesScreen
+    GetPage(
+      name: '/admin/cities',
+      page: () => const CitiesScreen(),
+      transition: Transition.fadeIn,
+    ),
+
+    GetPage(
+      name: '/admin/attractions',
+      page: () => AttractionsScreen(cityId: Get.arguments),
+      transition: Transition.rightToLeft,
     ),
   ];
 }

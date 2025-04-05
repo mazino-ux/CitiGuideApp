@@ -5,7 +5,7 @@ import 'theme_toggle.dart';
 
 class Navbar extends StatelessWidget {
   final bool isAdmin;
-  const Navbar({Key? key, required this.isAdmin}) : super(key: key);
+  const Navbar({super.key, required this.isAdmin});
 
   // Breakpoints: mobile <600, tablet 600-1099, desktop >=1100
   static const double mobileBreakpoint = 600;
