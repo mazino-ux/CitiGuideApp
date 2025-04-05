@@ -4,6 +4,7 @@ import 'package:citi_guide_app/models/city.dart';
 import 'package:citi_guide_app/presentation/admin/screens/attractions.dart';
 import 'package:citi_guide_app/presentation/admin/screens/confirmation_dialog.dart';
 import 'package:citi_guide_app/presentation/admin/widgets/add_edit_city_dialog.dart';
+import 'package:citi_guide_app/presentation/admin/widgets/admin_drawer.dart'; // Make sure to import
 import 'package:citi_guide_app/widgets/city_card.dart';
 
 class CitiesScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class _CitiesScreenState extends State<CitiesScreen> {
   final CityService _cityService = CityService();
   List<City> _cities = [];
   bool _isLoading = true;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // Add this key
 
   @override
   void initState() {
@@ -38,6 +40,8 @@ class _CitiesScreenState extends State<CitiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, // Assign the key to Scaffold
+      drawer: const AdminDrawer(), // Add the drawer here
       appBar: _buildAppBar(),
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
@@ -51,22 +55,25 @@ class _CitiesScreenState extends State<CitiesScreen> {
     return AppBar(
       title: const Text('Manage Cities'),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.menu, color: Colors.white),
+        onPressed: () {
+          _scaffoldKey.currentState?.openDrawer(); // Open drawer when menu is pressed
+        },
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.home,  color: Color.fromRGBO(255, 255, 255, 1)),
+          icon: const Icon(Icons.home, color: Colors.white),
           onPressed: () => Navigator.pushNamed(context, '/home'),
         ),
         IconButton(
-          icon: const Icon(Icons.refresh, color: Color.fromRGBO(255, 255, 255, 1)),
+          icon: const Icon(Icons.refresh, color: Colors.white),
           onPressed: _loadCities,
         ),
       ],
     );
   }
 
+  // ... rest of your existing code remains the same ...
   Widget _buildBody() {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_cities.isEmpty) return _buildEmptyState();
@@ -78,7 +85,7 @@ class _CitiesScreenState extends State<CitiesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.location_city, size: 48, color: Color.fromARGB(255, 157, 14, 193)),
+          const Icon(Icons.location_city, size: 48, color: Color.fromARGB(255, 79, 2, 98)),
           const SizedBox(height: 16),
           const Text('No cities found'),
           const SizedBox(height: 16),
