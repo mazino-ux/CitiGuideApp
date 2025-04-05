@@ -33,7 +33,7 @@ class Navbar extends StatelessWidget {
         title: _buildTitle(isMobile: true),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         leading: IconButton(
-          icon: Icon(Icons.menu, size: 24.sp),
+          icon: Icon(Icons.menu, size: 24.sp, color: Color.fromRGBO(255, 255, 255, 1),),
           onPressed: () => _openMobileMenu(context),
         ),
         actions: const [ThemeToggle()],
