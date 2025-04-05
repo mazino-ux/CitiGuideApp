@@ -99,7 +99,7 @@ class _AttractionListScreenState extends State<AttractionListScreen> {
                   image: attraction['image'],
                   rating: attraction['rating'],
                   category: attraction['category'],
-                  distance: attraction['distance'],
+                  distance: attraction['distance'], location: '',
                 );
               },
             ),
