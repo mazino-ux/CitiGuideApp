@@ -21,12 +21,24 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _filteredCities = [];
   Map<String, dynamic>? _selectedCity;
 
+  List<Map<String, dynamic>> _topAttractions = [];
+
   @override
   void initState() {
     super.initState();
 
     _filteredCities = List.from(cities);
     _selectedCity = _filteredCities.isNotEmpty ? _filteredCities[0] : null;
+
+    final allAttractions = cities
+        .expand((city) => city['attractions'] as List<Map<String, dynamic>>)
+        .toList();
+
+    allAttractions.sort(
+      (a, b) => (b['rating'] as double).compareTo(a['rating'] as double),
+    );
+
+    _topAttractions = allAttractions.take(10).toList();
 
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
@@ -56,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Open the standard flutter search popup.
   Future<void> _openSearch() async {
     final result = await showSearch<String>(
       context: context,
@@ -81,7 +92,10 @@ class _HomeScreenState extends State<HomeScreen> {
         preferredSize: Size.fromHeight(60.h),
         child: GestureDetector(
           onTap: _openSearch,
-          child: Navbar(isAdmin: isAdmin),
+          child: Navbar(
+            isAdmin: isAdmin,
+            cities: cities,
+          ),
         ),
       ),
       body: _isLoading
@@ -104,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onCitySelected: _onCitySelected,
                     ),
                   SizedBox(height: 20.h),
-                  FeaturedAttractions(),
+                  FeaturedAttractions(attractions: _topAttractions),
                   SizedBox(height: 20.h),
                   Footer(),
                 ],
