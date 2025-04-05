@@ -23,7 +23,7 @@ class AttractionsScreen extends StatefulWidget {
   @override
   void initState() {
     super.initState();
-    currentCityId = widget.cityId; // Assign cityId from the widget
+    currentCityId = widget.cityId; 
     _fetchAttractions();
   }
 

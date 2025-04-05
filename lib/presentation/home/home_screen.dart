@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       city: _selectedCity!['name']!,
                       image: _selectedCity!['image']!,
                       description: _selectedCity!['description']!,
-                      cities: _filteredCities, // Pass converted cities
+                      cities: _filteredCities, 
                       onCitySelected: _onCitySelected,
                     ),
                   SizedBox(height: 20.h),

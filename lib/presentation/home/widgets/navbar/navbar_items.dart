@@ -63,7 +63,7 @@ class NavbarItems extends StatelessWidget {
         _NavItem(
           icon: Icons.dashboard,
           label: isTablet ? "Admin" : "Admin Dashboard",
-          route: "/admin",
+          route: '/dashboard',
           isMobile: isMobile,
           isHighlighted: true,
         ),
