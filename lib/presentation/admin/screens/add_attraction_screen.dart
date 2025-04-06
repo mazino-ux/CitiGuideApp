@@ -1,15 +1,12 @@
 import 'dart:io';
-// import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as p;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddAttractionScreen extends StatefulWidget {
   final String cityId;
-
   const AddAttractionScreen({super.key, required this.cityId});
 
   @override
@@ -21,9 +18,10 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
   final _supabase = Supabase.instance.client;
   final _picker = ImagePicker();
 
-  dynamic _imageFile; // Can be File (mobile) or XFile (web)
-  Uint8List? _imageBytes; // For web image display
+  dynamic _imageFile;
+  Uint8List? _imageBytes;
   bool _isLoading = false;
+  bool _isFeatured = false;
 
   // Form controllers
   final _nameController = TextEditingController();
@@ -54,50 +52,47 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
       if (pickedFile == null) return;
 
       if (kIsWeb) {
-        // Web: Read as bytes
         final bytes = await pickedFile.readAsBytes();
         setState(() {
           _imageFile = pickedFile;
           _imageBytes = bytes;
         });
       } else {
-        // Mobile: Use File directly
         setState(() {
           _imageFile = File(pickedFile.path);
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: ${e.toString()}')),
-        );
-      }
+      _showError('Failed to pick image: ${e.toString()}');
     }
   }
 
   Future<String?> _uploadImage() async {
     if (_imageFile == null) return null;
 
-    final fileExtension = kIsWeb 
-        ? '.jpg' // Default extension for web
-        : p.extension(_imageFile.path);
+    final fileExtension = kIsWeb ? '.jpg' : '.${_imageFile.path.split('.').last}';
     final fileName = '${DateTime.now().millisecondsSinceEpoch}$fileExtension';
     final filePath = 'attractions/$fileName';
 
     try {
       if (kIsWeb) {
-        // Web upload using bytes
         await _supabase.storage
             .from('attractions')
             .uploadBinary(filePath, _imageBytes!);
       } else {
-        // Mobile upload using File
         await _supabase.storage
             .from('attractions')
             .upload(filePath, _imageFile);
       }
       return _supabase.storage.from('attractions').getPublicUrl(filePath);
     } catch (e) {
+      // Handle 403 unauthorized error
+      if (e is StorageException && e.statusCode == '403') {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+        return null;
+      }
       throw Exception('Failed to upload image: ${e.toString()}');
     }
   }
@@ -105,11 +100,7 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
     if (_imageFile == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an image')),
-        );
-      }
+      _showError('Please select an image');
       return;
     }
 
@@ -117,9 +108,10 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
 
     try {
       final imageUrl = await _uploadImage();
+      if (imageUrl == null) return; // Upload failed and redirected
 
       final attractionData = {
-        'city_id': widget.cityId, // Add city_id
+        'city_id': widget.cityId,
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
         'location': _locationController.text.trim(),
@@ -130,59 +122,141 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
         'phone': _phoneController.text.trim(),
         'image_url': imageUrl,
         'created_at': DateTime.now().toIso8601String(),
-        'is_featured': false,
+        'is_featured': _isFeatured,
         'rating': 0.0,
       };
 
-      await _supabase.from('attractions').insert(attractionData);
+      await _supabase.from('attractions').insert(attractionData)
+          .onError((error, _) {
+            // Handle 403 unauthorized error
+            if (error is PostgrestException && error.code == '403') {
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/login');
+              }
+              return;
+            }
+            throw error!;
+          });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Attraction added successfully!')),
-        );
-        Navigator.pop(context);
-      }
+      _showSuccess('Attraction added successfully!');
+      if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+      // Only show error if not a 403 (already redirected)
+      if (!(e is PostgrestException && e.code == '403') &&
+          !(e is StorageException && e.statusCode == '403')) {
+        _showError('Error: ${e.toString()}');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color.fromARGB(255, 205, 17, 17),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color.fromARGB(255, 8, 153, 83),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Attraction'),
+        title: const Text('Create New Attraction'),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: _isLoading
+                ? const CircularProgressIndicator()
+                : const Icon(Icons.save_rounded, color: Colors.white),
             onPressed: _isLoading ? null : _submitForm,
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image Picker Section
+              // Cute Image Picker
               _buildImagePicker(),
               const SizedBox(height: 24),
-              
-              // Form Fields  
+
+              // Featured Toggle - Extra Cute Version
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: colorScheme.outline.withAlpha(60),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.star_rounded,
+                      color: _isFeatured 
+                          ? Colors.amber 
+                          : colorScheme.onSurface.withAlpha(150),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Feature this attraction',
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                    const Spacer(),
+                    Switch(
+                      value: _isFeatured,
+                      onChanged: (value) => setState(() => _isFeatured = value),
+                      activeColor: Colors.amber,
+                      activeTrackColor: Colors.amber.withAlpha(100),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Section Header
+              Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 8),
+                child: Text(
+                  'Basic Information',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ),
+
+              // Name Field
               _buildTextField(
                 controller: _nameController,
                 label: 'Attraction Name',
-                icon: Icons.place,
+                icon: Icons.place_rounded,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter attraction name';
@@ -191,12 +265,13 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
+              // Description Field
               _buildTextField(
                 controller: _descriptionController,
                 label: 'Description',
-                icon: Icons.description,
-                maxLines: 3,
+                icon: Icons.description_rounded,
+                maxLines: 4,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter description';
@@ -207,12 +282,24 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              
+              const SizedBox(height: 24),
+
+              // Section Header
+              Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 8),
+                child: Text(
+                  'Location & Details',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ),
+
+              // Location Field
               _buildTextField(
                 controller: _locationController,
                 label: 'Location',
-                icon: Icons.location_on,
+                icon: Icons.location_on_rounded,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter location';
@@ -221,14 +308,15 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
+              // Price & Category Row
               Row(
                 children: [
                   Expanded(
                     child: _buildTextField(
                       controller: _priceController,
                       label: 'Price (\$)',
-                      icon: Icons.attach_money,
+                      icon: Icons.attach_money_rounded,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
@@ -246,7 +334,7 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                     child: _buildTextField(
                       controller: _categoryController,
                       label: 'Category',
-                      icon: Icons.category,
+                      icon: Icons.category_rounded,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter category';
@@ -258,45 +346,76 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
+              // Hours Field
               _buildTextField(
                 controller: _hoursController,
                 label: 'Opening Hours',
-                icon: Icons.access_time,
+                icon: Icons.access_time_rounded,
                 hintText: 'e.g. 9:00 AM - 5:00 PM',
               ),
-              const SizedBox(height: 16),
-              
+              const SizedBox(height: 24),
+
+              // Section Header
+              Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 8),
+                child: Text(
+                  'Contact Information',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ),
+
+              // Website Field
               _buildTextField(
                 controller: _websiteController,
                 label: 'Website',
-                icon: Icons.public,
+                icon: Icons.public_rounded,
                 keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 16),
-              
+
+              // Phone Field
               _buildTextField(
                 controller: _phoneController,
                 label: 'Phone Number',
-                icon: Icons.phone,
+                icon: Icons.phone_rounded,
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 32),
-              
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitForm,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+
+              // Super Cute Submit Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: colorScheme.primaryContainer,
+                    foregroundColor: colorScheme.onPrimaryContainer,
+                    elevation: 0,
                   ),
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.rocket_launch_rounded),
+                  label: _isLoading
+                      ? const Text('Creating...')
+                      : const Text(
+                          'Launch Attraction!',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Save Attraction',
-                        style: TextStyle(fontSize: 16),
-                      ),
               ),
             ],
           ),
@@ -306,46 +425,66 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
   }
 
   Widget _buildImagePicker() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Attraction Image',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        Padding(
+          padding: const EdgeInsets.only(left: 8, bottom: 8),
+          child: Text(
+            'Attraction Image',
+            style: theme.textTheme.titleMedium,
+          ),
         ),
-        const SizedBox(height: 8),
         GestureDetector(
           onTap: _pickImage,
           child: Container(
             height: 200,
             width: double.infinity,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(16),
+              color: colorScheme.surfaceContainerHigh,
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withAlpha(185),
+                color: colorScheme.outline.withAlpha(80),
+                width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withAlpha(30),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: _imageFile == null
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.add_photo_alternate,
+                        Icons.add_photo_alternate_rounded,
                         size: 48,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: colorScheme.primary,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Text(
                         'Tap to add image',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Recommended: 16:9 ratio',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface.withAlpha(150),
                         ),
                       ),
                     ],
                   )
                 : ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     child: kIsWeb
                         ? Image.memory(_imageBytes!, fit: BoxFit.cover)
                         : Image.file(_imageFile!, fit: BoxFit.cover),
@@ -366,16 +505,41 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
-        prefixIcon: Icon(icon),
+        prefixIcon: Container(
+          margin: const EdgeInsets.only(right: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              right: BorderSide(
+                color: colorScheme.outline.withAlpha(50),
+                width: 1,
+              ),
+            ),
+          ),
+          child: Icon(
+            icon,
+            color: colorScheme.primary,
+          ),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: colorScheme.surfaceContainerHigh,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
         ),
       ),
+      style: theme.textTheme.bodyLarge,
       maxLines: maxLines,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,

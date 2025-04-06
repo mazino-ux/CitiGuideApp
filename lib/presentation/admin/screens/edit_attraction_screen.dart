@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-// import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 
 class EditAttractionScreen extends StatefulWidget {
@@ -39,6 +38,11 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+    _isFeatured = widget.attraction['is_featured'] ?? false;
+  }
+
+  void _initializeControllers() {
     _nameController = TextEditingController(text: widget.attraction['name']);
     _descriptionController = TextEditingController(text: widget.attraction['description']);
     _locationController = TextEditingController(text: widget.attraction['location']);
@@ -47,7 +51,6 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
     _hoursController = TextEditingController(text: widget.attraction['opening_hours']);
     _websiteController = TextEditingController(text: widget.attraction['website']);
     _phoneController = TextEditingController(text: widget.attraction['phone']);
-    _isFeatured = widget.attraction['is_featured'] ?? false;
   }
 
   @override
@@ -81,9 +84,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: ${e.toString()}')),
-        );
+        _showError('Failed to pick image: ${e.toString()}');
       }
     }
   }
@@ -132,6 +133,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
         'website': _websiteController.text.trim(),
         'phone': _phoneController.text.trim(),
         'is_featured': _isFeatured,
+        'updated_at': DateTime.now().toIso8601String(),
         if (imageUrl != null) 'image_url': imageUrl,
       };
 
@@ -141,16 +143,12 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
           .eq('id', widget.attraction['id']);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Attraction updated successfully!')),
-        );
+        _showSuccess('Attraction updated successfully!');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        _showError('Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -159,14 +157,46 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
     }
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color.fromARGB(255, 236, 30, 30),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color.fromARGB(255, 19, 207, 116),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Attraction'),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: _isLoading
+                ? const CircularProgressIndicator()
+                : Icon(Icons.save_rounded, color: Colors.white),
             onPressed: _isLoading ? null : _updateAttraction,
           ),
         ],
@@ -176,25 +206,51 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Image Picker Section
               _buildImagePicker(),
               const SizedBox(height: 24),
               
               // Featured Toggle
-              SwitchListTile(
-                title: const Text('Featured Attraction'),
-                value: _isFeatured,
-                onChanged: (value) => setState(() => _isFeatured = value),
+              Card(
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: colorScheme.outline.withAlpha(100),
+                    width: 1,
+                  ),
+                ),
+                child: SwitchListTile(
+                  title: Text(
+                    'Featured Attraction',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  subtitle: Text(
+                    'Show this attraction in featured section',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  value: _isFeatured,
+                  onChanged: (value) => setState(() => _isFeatured = value),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Section Header
+              Text(
+                'Basic Information',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 16),
               
-              // Form Fields (same as AddAttractionScreen)
+              // Name Field
               _buildTextField(
                 controller: _nameController,
                 label: 'Attraction Name',
-                icon: Icons.place,
+                icon: Icons.place_rounded,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter attraction name';
@@ -204,11 +260,12 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
               ),
               const SizedBox(height: 16),
               
+              // Description Field
               _buildTextField(
                 controller: _descriptionController,
                 label: 'Description',
-                icon: Icons.description,
-                maxLines: 3,
+                icon: Icons.description_rounded,
+                maxLines: 4,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter description';
@@ -219,12 +276,22 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 24),
+              
+              // Section Header
+              Text(
+                'Location & Details',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: colorScheme.primary,
+                ),
+              ),
               const SizedBox(height: 16),
               
+              // Location Field
               _buildTextField(
                 controller: _locationController,
                 label: 'Location',
-                icon: Icons.location_on,
+                icon: Icons.location_on_rounded,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter location';
@@ -234,13 +301,14 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
               ),
               const SizedBox(height: 16),
               
+              // Price & Category Row
               Row(
                 children: [
                   Expanded(
                     child: _buildTextField(
                       controller: _priceController,
                       label: 'Price (\$)',
-                      icon: Icons.attach_money,
+                      icon: Icons.attach_money_rounded,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
@@ -258,7 +326,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                     child: _buildTextField(
                       controller: _categoryController,
                       label: 'Category',
-                      icon: Icons.category,
+                      icon: Icons.category_rounded,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter category';
@@ -271,44 +339,65 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
               ),
               const SizedBox(height: 16),
               
+              // Hours Field
               _buildTextField(
                 controller: _hoursController,
                 label: 'Opening Hours',
-                icon: Icons.access_time,
+                icon: Icons.access_time_rounded,
                 hintText: 'e.g. 9:00 AM - 5:00 PM',
+              ),
+              const SizedBox(height: 24),
+              
+              // Section Header
+              Text(
+                'Contact Information',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 16),
               
+              // Website Field
               _buildTextField(
                 controller: _websiteController,
                 label: 'Website',
-                icon: Icons.public,
+                icon: Icons.public_rounded,
                 keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 16),
               
+              // Phone Field
               _buildTextField(
                 controller: _phoneController,
                 label: 'Phone Number',
-                icon: Icons.phone,
+                icon: Icons.phone_rounded,
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 32),
               
-              ElevatedButton(
-                onPressed: _isLoading ? null : _updateAttraction,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              // Save Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _updateAttraction,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                   ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text(
+                          'UPDATE ATTRACTION',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Update Attraction',
-                        style: TextStyle(fontSize: 16),
-                      ),
               ),
             ],
           ),
@@ -318,12 +407,17 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
   }
 
   Widget _buildImagePicker() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Attraction Image',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 8),
         GestureDetector(
@@ -333,9 +427,10 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              color: colorScheme.surfaceContainerHighest,
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withAlpha(120),
+                color: colorScheme.outline.withAlpha(100),
+                width: 1,
               ),
             ),
             child: _imageFile != null
@@ -352,12 +447,22 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                           imageUrl: widget.attraction['image_url'],
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
-                            color: Colors.grey[200],
-                            child: const Center(child: CircularProgressIndicator()),
+                            color: colorScheme.surfaceContainerLow,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: colorScheme.primary,
+                              ),
+                            ),
                           ),
                           errorWidget: (context, url, error) => Container(
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.broken_image),
+                            color: colorScheme.surfaceContainerLow,
+                            child: Center(
+                              child: Icon(
+                                Icons.broken_image_rounded,
+                                size: 48,
+                                color: colorScheme.error,
+                              ),
+                            ),
                           ),
                         ),
                       )
@@ -365,15 +470,15 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.add_photo_alternate,
+                            Icons.add_photo_alternate_rounded,
                             size: 48,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: colorScheme.primary,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Tap to change image',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.primary,
                             ),
                           ),
                         ],
@@ -394,16 +499,34 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(
+          icon,
+          color: colorScheme.onSurface.withAlpha(180),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: colorScheme.outline.withAlpha(120),
+          ),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: colorScheme.outline.withAlpha(120),
+          ),
+        ),
+        filled: true,
+        fillColor: colorScheme.surfaceContainerLow,
       ),
+      style: theme.textTheme.bodyMedium,
       maxLines: maxLines,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
