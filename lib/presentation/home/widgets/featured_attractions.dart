@@ -3,6 +3,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:citi_guide_app/widgets/attraction_card.dart';
 import 'package:citi_guide_app/presentation/attractions/attraction_detail/attraction_detail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class FeaturedAttractions extends StatefulWidget {
   const FeaturedAttractions({super.key});
@@ -39,38 +40,16 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
             rating, 
             category,
             location,
-            description
+            description,
+            is_featured
           ''')
-          .eq('is_featured', true)
-          .order('created_at', ascending: false)
-          .limit(5);
+          .order('rating', ascending: false)
+          .limit(6); // Get 6 attractions for 3 rows
 
-      if (response.isEmpty) {
-        // If no featured attractions, get some regular ones as fallback
-        final fallbackResponse = await _supabase
-            .from('attractions')
-            .select('''
-              id, 
-              name, 
-              image, 
-              rating, 
-              category,
-              location,
-              description
-            ''')
-            .order('rating', ascending: false)
-            .limit(3);
-            
-        setState(() {
-          _attractions = List<Map<String, dynamic>>.from(fallbackResponse);
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _attractions = List<Map<String, dynamic>>.from(response);
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _attractions = List<Map<String, dynamic>>.from(response);
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -97,47 +76,63 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = screenWidth * 0.7;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            'Featured Attractions',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Top Attractions',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onBackground,
                 ),
           ),
-        ),
-        SizedBox(
-          height: 250,
-          child: _buildAttractionsList(cardWidth),
-        ),
-      ],
+          SizedBox(height: 8.h),
+          Text(
+            'Discover the most popular places to visit',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                ),
+          ),
+          SizedBox(height: 16.h),
+          _buildAttractionsGrid(),
+        ],
+      ),
     );
   }
 
-  Widget _buildAttractionsList(double cardWidth) {
+  Widget _buildAttractionsGrid() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 40.h),
+          child: const CircularProgressIndicator(),
+        ),
+      );
     }
 
     if (_hasError) {
       return Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            const Text('Failed to load attractions'),
-            const SizedBox(height: 16),
+            SizedBox(height: 40.h),
+            Icon(Icons.error_outline, size: 40.w, color: Colors.red),
+            SizedBox(height: 16.h),
+            Text(
+              'Failed to load attractions',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: _fetchFeaturedAttractions,
-              child: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+              ),
+              child: Text('Try Again'),
             ),
           ],
         ),
@@ -145,47 +140,55 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
     }
 
     if (_attractions.isEmpty) {
-      return const Center(
-        child: Text('No attractions available'),
+      return Center(
+        child: Column(
+          children: [
+            SizedBox(height: 40.h),
+            Icon(Icons.search_off, size: 40.w, color: Colors.grey),
+            SizedBox(height: 16.h),
+            Text(
+              'No attractions found',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ],
+        ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      scrollDirection: Axis.horizontal,
-      itemCount: _attractions.length,
-      itemBuilder: (context, index) {
-        final attraction = _attractions[index];
-        return AnimationConfiguration.staggeredList(
-          position: index,
-          duration: const Duration(milliseconds: 500),
-          child: SlideAnimation(
-            horizontalOffset: 50.0,
-            child: FadeInAnimation(
-              child: GestureDetector(
-                onTap: () {
-                  debugPrint('Tapped on attraction: ${attraction['id']}');
-                  _navigateToDetail(context, attraction['id'].toString());
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    width: cardWidth,
-                    child: AttractionCard(
-                      name: attraction['name'] ?? 'Unnamed Attraction',
-                      image: attraction['image_url'] ?? '',
-                      rating: (attraction['rating'] as num?)?.toDouble() ?? 0.0,
-                      category: attraction['category'] ?? 'Unknown',
-                      location: attraction['location'] ?? 'Location not specified',
-                      distance: null, 
-                    ),
-                  ),
+    return AnimationLimiter(
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16.w,
+          mainAxisSpacing: 16.h,
+          childAspectRatio: 0.75,
+        ),
+        itemCount: _attractions.length,
+        itemBuilder: (context, index) {
+          final attraction = _attractions[index];
+          return AnimationConfiguration.staggeredGrid(
+            position: index,
+            duration: const Duration(milliseconds: 500),
+            columnCount: 2,
+            child: ScaleAnimation(
+              child: FadeInAnimation(
+                child: AttractionCard(
+                  name: attraction['name'] ?? 'Unnamed Attraction',
+                  image: attraction['image_url'] ?? '',
+                  rating: (attraction['rating'] as num?)?.toDouble() ?? 0.0,
+                  category: attraction['category'] ?? 'Unknown',
+                  location: attraction['location'] ?? 'Location not specified',
+                  distance: null,
+                  // isFeatured: attraction['is_featured'] ?? false,
+                  onTap: () => _navigateToDetail(context, attraction['id'].toString()),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
