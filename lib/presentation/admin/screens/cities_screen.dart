@@ -128,11 +128,11 @@ class _CitiesScreenState extends State<CitiesScreen> {
           try {
             await _cityService.addCity(city, imageBytes);
             if (mounted) {
-              _showSnackbar('City added successfully', Colors.green);
+              _showSnackbar('City added successfully', const Color.fromARGB(255, 7, 174, 93));
               _loadCities();
             }
           } catch (e) {
-            _showSnackbar('Failed to add city: ${e.toString()}', Colors.red);
+            _showSnackbar('Failed to add city: ${e.toString()}', const Color.fromARGB(255, 220, 37, 24));
           }
         },
       ),
@@ -148,11 +148,11 @@ class _CitiesScreenState extends State<CitiesScreen> {
           try {
             await _cityService.updateCity(updatedCity, newImageBytes: newImageBytes);
             if (mounted) {
-              _showSnackbar('City updated successfully', Colors.green);
+              _showSnackbar('City updated successfully', const Color.fromARGB(255, 17, 162, 99));
               _loadCities();
             }
           } catch (e) {
-            _showSnackbar('Failed to update city: ${e.toString()}', Colors.red);
+            _showSnackbar('Failed to update city: ${e.toString()}', const Color.fromARGB(255, 191, 32, 20));
           }
         },
       ),
