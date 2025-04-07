@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:citi_guide_app/models/city.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:io';
 
 class AddEditCityDialog extends StatefulWidget {
@@ -23,6 +24,7 @@ class _AddEditCityDialogState extends State<AddEditCityDialog> {
   final _picker = ImagePicker();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final Uuid _uuid = const Uuid();
 
   dynamic _imageFile;
   Uint8List? _imageBytes;
@@ -76,7 +78,7 @@ class _AddEditCityDialogState extends State<AddEditCityDialog> {
 
     try {
       final city = City(
-        id: widget.city?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id: widget.city?.id ?? _uuid.v4(), // Generate proper UUID
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         imageUrl: widget.city?.imageUrl,
@@ -86,7 +88,7 @@ class _AddEditCityDialogState extends State<AddEditCityDialog> {
 
       await widget.onSave(
         city,
-        _imageBytes ?? Uint8List(0), // Empty bytes if no new image
+        _imageBytes ?? Uint8List(0),
       );
 
       if (mounted) Navigator.pop(context);

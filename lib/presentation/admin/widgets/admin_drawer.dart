@@ -43,7 +43,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
               children: [
                 const CircleAvatar(
                   radius: 30,
-                  backgroundImage: AssetImage('assets/admin_avatar.png'),
+                  backgroundImage: AssetImage('assets/images/admin_avatar.png'),
                 ),
                 const SizedBox(height: 10),
                 Text(

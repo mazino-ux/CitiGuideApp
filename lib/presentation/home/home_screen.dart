@@ -19,18 +19,27 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
 
-  List<Map<String, String>> _filteredCities = [];
-  Map<String, String>? _selectedCity;
+  List<Map<String, dynamic>> _filteredCities = [];
+  Map<String, dynamic>? _selectedCity;
+
+  List<Map<String, dynamic>> _topAttractions = [];
 
   @override
   void initState() {
     super.initState();
 
-    _filteredCities = cities
-        .map(
-            (city) => city.map((key, value) => MapEntry(key, value.toString())))
-        .toList();
+    _filteredCities = List.from(cities);
     _selectedCity = _filteredCities.isNotEmpty ? _filteredCities[0] : null;
+
+    final allAttractions = cities
+        .expand((city) => city['attractions'] as List<Map<String, dynamic>>)
+        .toList();
+
+    allAttractions.sort(
+      (a, b) => (b['rating'] as double).compareTo(a['rating'] as double),
+    );
+
+    _topAttractions = allAttractions.take(10).toList();
 
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
@@ -42,10 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _filterCities(String query) {
     setState(() {
       _filteredCities = cities
-          .map((city) =>
-              city.map((key, value) => MapEntry(key, value.toString())))
-          .where((city) =>
-              city['name']!.toLowerCase().contains(query.toLowerCase()))
+          .where((city) => city['name']
+              .toString()
+              .toLowerCase()
+              .contains(query.toLowerCase()))
           .toList();
 
       if (!_filteredCities.contains(_selectedCity)) {
@@ -54,13 +63,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _onCitySelected(Map<String, String> city) {
+  void _onCitySelected(Map<String, dynamic> city) {
     setState(() {
       _selectedCity = city;
     });
   }
 
-  // Open the standard flutter search popup.
   Future<void> _openSearch() async {
     final result = await showSearch<String>(
       context: context,
@@ -84,9 +92,11 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.h),
         child: GestureDetector(
-          // Wrap the Navbar with GestureDetector
           onTap: _openSearch,
-          child: Navbar(isAdmin: isAdmin),
+          child: Navbar(
+            isAdmin: isAdmin,
+            cities: cities,
+          ),
         ),
       ),
       // Add a search bar to the app bar
@@ -106,11 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       city: _selectedCity!['name']!,
                       image: _selectedCity!['image']!,
                       description: _selectedCity!['description']!,
-                      cities: _filteredCities, // Pass converted cities
+                      cities: _filteredCities,
                       onCitySelected: _onCitySelected,
                     ),
                   SizedBox(height: 20.h),
-                  FeaturedAttractions(),
+                  FeaturedAttractions(attractions: _topAttractions),
                   SizedBox(height: 20.h),
                   // Padding(
                   //   padding: EdgeInsets.symmetric(horizontal: 16.w),

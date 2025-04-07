@@ -6,6 +6,7 @@ import 'package:citi_guide_app/presentation/auth/login_screen.dart';
 import 'package:citi_guide_app/presentation/auth/onboarding_screen.dart';
 import 'package:citi_guide_app/presentation/auth/register_screen.dart';
 import 'package:citi_guide_app/presentation/auth/role_selection_screen.dart';
+import 'package:citi_guide_app/presentation/explore/explore_screen.dart';
 import 'package:citi_guide_app/presentation/home/home_screen.dart';
 import 'package:get/get.dart';
 
@@ -17,6 +18,7 @@ class Routes {
   static const String forgotPassword = '/forgotPassword';
   static const String home = '/home';
   static const String adminDashboard = '/dashboard';
+  static const String explore = '/explore';
 }
 
 class AppRoutes {
@@ -51,11 +53,19 @@ class AppRoutes {
       page: () => const HomeScreen(),
     ),
     GetPage(
+      name: Routes.explore,
+      page: () {
+        final cities = Get.arguments as List<Map<String, dynamic>>;
+        return ExploreScreen(cities: cities);
+      },
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
       name: Routes.adminDashboard,
       page: () => const AdminDashboard(),
       transition: Transition.fadeIn,
     ),
-        // Update your router to include the CitiesScreen
+    // Update your router to include the CitiesScreen
     GetPage(
       name: '/admin/cities',
       page: () => const CitiesScreen(),
