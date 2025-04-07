@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'widgets/hero_section.dart';
 import 'widgets/featured_attractions.dart';
 import 'widgets/footer.dart';
+import 'package:citi_guide_app/presentation/city/city_attractions_screen.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
     _filteredCities = List.from(cities);
     _selectedCity = _filteredCities.isNotEmpty ? _filteredCities[0] : null;
 
@@ -78,6 +78,15 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedCity = city;
     });
+  }
+
+  void _navigateToCityAttractions(BuildContext context, Map<String, dynamic> city) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CityAttractionsScreen(city: city),
+      ),
+    );
   }
 
   Future<void> _openSearch() async {
@@ -239,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   final city = _filteredCities[index];
                                   return _CityCard(
                                     city: city,
-                                    onTap: () => _onCitySelected(city),
+                                    onTap: () => _navigateToCityAttractions(context, city),
                                   );
                                 },
                               ),
