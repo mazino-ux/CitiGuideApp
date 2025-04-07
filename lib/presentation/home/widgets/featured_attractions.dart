@@ -5,7 +5,12 @@ import 'package:citi_guide_app/presentation/attractions/attraction_detail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FeaturedAttractions extends StatefulWidget {
-  const FeaturedAttractions({super.key});
+  final List<Map<String, dynamic>> attractions;
+
+  const FeaturedAttractions({
+    super.key,
+    required this.attractions,
+  });
 
   @override
   State<FeaturedAttractions> createState() => _FeaturedAttractionsState();
@@ -47,9 +52,7 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
 
       if (response.isEmpty) {
         // If no featured attractions, get some regular ones as fallback
-        final fallbackResponse = await _supabase
-            .from('attractions')
-            .select('''
+        final fallbackResponse = await _supabase.from('attractions').select('''
               id, 
               name, 
               image_url, 
@@ -57,10 +60,8 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
               category,
               location,
               description
-            ''')
-            .order('rating', ascending: false)
-            .limit(3);
-            
+            ''').order('rating', ascending: false).limit(3);
+
         setState(() {
           _attractions = List<Map<String, dynamic>>.from(fallbackResponse);
           _isLoading = false;
@@ -90,6 +91,7 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
       MaterialPageRoute(
         builder: (context) => AttractionDetail(
           attractionId: attractionId,
+          attraction: null,
         ),
       ),
     );
@@ -173,12 +175,13 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
                       image: attraction['image_url'] ?? '',
                       rating: (attraction['rating'] as num?)?.toDouble() ?? 0.0,
                       category: attraction['category'] ?? 'Unknown',
-                      location: attraction['location'] ?? 'Location not specified', distance: null,
+                      location:
+                          attraction['location'] ?? 'Location not specified',
+                      distance: null,
                     ),
                   ),
                 ),
               ),
-
             ),
           ),
         );
@@ -186,4 +189,3 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
     );
   }
 }
-
