@@ -1,4 +1,5 @@
 import 'package:citi_guide_app/data/city_data.dart';
+import 'package:citi_guide_app/presentation/home/widgets/faq_widget.dart';
 import 'package:citi_guide_app/presentation/home/widgets/navbar/navbar.dart';
 import 'package:citi_guide_app/presentation/home/widgets/search_bar.dart';
 import 'package:flutter/material.dart';
@@ -98,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+      // Add a search bar to the app bar
       body: _isLoading
           ? Center(
               child: Lottie.asset(
@@ -120,6 +122,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(height: 20.h),
                   FeaturedAttractions(),
                   SizedBox(height: 20.h),
+                  // Padding(
+                  //   padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  //   child: const Align(
+                  //     alignment: Alignment.centerLeft,
+                  //     child: Text(
+                  //       'Need Help?',
+                  //       style: TextStyle(
+                  //         fontSize: 20,
+                  //         fontWeight: FontWeight.bold,
+                  //         color: Colors.deepPurple,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  // SizedBox(height: 10.h),
+                  const FAQWidget(), // ← Add this line here
+                  SizedBox(height: 20.h), // Optional spacing
                   Footer(),
                 ],
               ),
