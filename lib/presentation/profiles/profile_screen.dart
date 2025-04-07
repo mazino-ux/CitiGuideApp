@@ -69,12 +69,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .eq('id', userId)
           .single();
       
-      if (response != null) {
-        _usernameController.text = response['username'] ?? '';
-        _bioController.text = response['bio'] ?? '';
-        _avatarUrl = response['avatar_url'];
-      }
-    } catch (e) {
+      _usernameController.text = response['username'] ?? '';
+      _bioController.text = response['bio'] ?? '';
+      _avatarUrl = response['avatar_url'];
+        } catch (e) {
       if (mounted) {
         if (e is PostgrestException && e.code == '403') {
           Navigator.pushReplacementNamed(context, '/login');

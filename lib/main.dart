@@ -8,6 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:citi_guide_app/core/theme/theme_provider.dart';
 import 'package:citi_guide_app/app.dart';
+import 'package:citi_guide_app/presentation/home/faq/faq_page.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +17,7 @@ void main() async {
   // Load environment variables
   await dotenv.load(fileName: ".env");
 
-  // ✅ Initialize Supabase with secure API keys
+  // Initialize Supabase with secure API keys
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
@@ -38,7 +40,19 @@ class MainApp extends StatelessWidget {
       builder: (_, child) {
         return ChangeNotifierProvider(
           create: (_) => ThemeProvider(),
-          child: child,
+          child: Builder(
+            builder: (context) {
+              return MaterialApp(
+                title: 'City Guide',
+                theme: ThemeData(primarySwatch: Colors.deepPurple),
+                debugShowCheckedModeBanner: false,
+                home: const App(),
+                routes: {
+                  '/faq': (context) => const FAQPage(), // Add FAQ route
+                },
+              );
+            },
+          ),
         );
       },
       child: const App(),
