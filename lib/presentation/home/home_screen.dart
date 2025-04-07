@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _filteredCities = [];
   Map<String, dynamic>? _selectedCity;
 
-  List<Map<String, dynamic>> _topAttractions = [];
+  // List<Map<String, dynamic>> _topAttractions = [];
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
       (a, b) => (b['rating'] as double).compareTo(a['rating'] as double),
     );
 
-    _topAttractions = allAttractions.take(10).toList();
+    // _topAttractions = allAttractions.take(10).toList();
 
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
@@ -118,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onCitySelected: _onCitySelected,
                     ),
                   SizedBox(height: 20.h),
-                  FeaturedAttractions(attractions: _topAttractions),
+                  FeaturedAttractions(),
                   SizedBox(height: 20.h),
                   Footer(),
                 ],

@@ -8,6 +8,7 @@ import 'package:citi_guide_app/presentation/auth/register_screen.dart';
 import 'package:citi_guide_app/presentation/auth/role_selection_screen.dart';
 import 'package:citi_guide_app/presentation/explore/explore_screen.dart';
 import 'package:citi_guide_app/presentation/home/home_screen.dart';
+import 'package:citi_guide_app/presentation/profiles/profile_screen.dart';
 import 'package:get/get.dart';
 
 class Routes {
@@ -75,6 +76,12 @@ class AppRoutes {
     GetPage(
       name: '/admin/attractions',
       page: () => AttractionsScreen(cityId: Get.arguments),
+      transition: Transition.rightToLeft,
+    ),
+
+    GetPage(
+      name: '/profile',
+      page: () => ProfileScreen(),
       transition: Transition.rightToLeft,
     ),
   ];

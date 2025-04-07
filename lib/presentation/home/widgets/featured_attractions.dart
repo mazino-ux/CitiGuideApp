@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:citi_guide_app/widgets/attraction_card.dart';
-import 'package:citi_guide_app/presentation/attractions/attraction_detail.dart';
+import 'package:citi_guide_app/presentation/attractions/attraction_detail/attraction_detail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FeaturedAttractions extends StatefulWidget {
@@ -52,7 +52,7 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
             .select('''
               id, 
               name, 
-              image_url, 
+              image, 
               rating, 
               category,
               location,
@@ -162,10 +162,13 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
           child: SlideAnimation(
             horizontalOffset: 50.0,
             child: FadeInAnimation(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GestureDetector(
-                  onTap: () => _navigateToDetail(context, attraction['id']),
+              child: GestureDetector(
+                onTap: () {
+                  debugPrint('Tapped on attraction: ${attraction['id']}');
+                  _navigateToDetail(context, attraction['id'].toString());
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
                   child: SizedBox(
                     width: cardWidth,
                     child: AttractionCard(
@@ -173,12 +176,12 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
                       image: attraction['image_url'] ?? '',
                       rating: (attraction['rating'] as num?)?.toDouble() ?? 0.0,
                       category: attraction['category'] ?? 'Unknown',
-                      location: attraction['location'] ?? 'Location not specified', distance: null,
+                      location: attraction['location'] ?? 'Location not specified',
+                      distance: null, 
                     ),
                   ),
                 ),
               ),
-
             ),
           ),
         );
@@ -186,4 +189,3 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
     );
   }
 }
-
