@@ -23,16 +23,13 @@ dependencies:
   image_picker: ^1.1.2
   path: ^1.9.0
   cached_network_image: ^3.4.1
-<<<<<<< HEAD
-  lucide_icons: ^0.257.0 
+  lucide_icons: ^0.257.0  
   async: 2.12.0  # Make sure this is up-to-date
-=======
   flutter_map: ^8.0.0
   latlong2: ^0.9.1
   get_storage: ^2.1.1
   flutter_rating_bar: ^4.0.1
   uuid: ^4.5.1
->>>>>>> 2a248c9bd51ee4831b49cf98671c019e1dc76b35
 
 dev_dependencies:
   flutter_test:

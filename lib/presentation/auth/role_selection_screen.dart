@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
-  const RoleSelectionScreen({Key? key}) : super(key: key);
+  const RoleSelectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -181,14 +181,13 @@ class _RoleCard extends StatelessWidget {
   final double scaleFactor;
 
   const _RoleCard({
-    Key? key,
     required this.title,
     required this.icon,
     required this.description,
     required this.gradient,
     required this.onTap,
     required this.scaleFactor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
