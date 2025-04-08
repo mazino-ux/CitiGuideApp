@@ -32,6 +32,8 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
   final _hoursController = TextEditingController();
   final _websiteController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _latitudeController = TextEditingController();
+  final _longitudeController = TextEditingController();
 
   @override
   void dispose() {
@@ -43,6 +45,8 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
     _hoursController.dispose();
     _websiteController.dispose();
     _phoneController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
     super.dispose();
   }
 
@@ -70,7 +74,8 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
   Future<String?> _uploadImage() async {
     if (_imageFile == null) return null;
 
-    final fileExtension = kIsWeb ? '.jpg' : '.${_imageFile.path.split('.').last}';
+    final fileExtension =
+        kIsWeb ? '.jpg' : '.${_imageFile.path.split('.').last}';
     final fileName = '${DateTime.now().millisecondsSinceEpoch}$fileExtension';
     final filePath = 'attractions/$fileName';
 
@@ -123,20 +128,24 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
         'image_url': imageUrl,
         'created_at': DateTime.now().toIso8601String(),
         'is_featured': _isFeatured,
+        'latitude': _latitudeController.text.trim(),
+        'longitude': _longitudeController.text.trim(),
         'rating': 0.0,
       };
 
-      await _supabase.from('attractions').insert(attractionData)
+      await _supabase
+          .from('attractions')
+          .insert(attractionData)
           .onError((error, _) {
-            // Handle 403 unauthorized error
-            if (error is PostgrestException && error.code == '403') {
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
-              return;
-            }
-            throw error!;
-          });
+        // Handle 403 unauthorized error
+        if (error is PostgrestException && error.code == '403') {
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/login');
+          }
+          return;
+        }
+        throw error!;
+      });
 
       _showSuccess('Attraction added successfully!');
       if (mounted) Navigator.pop(context);
@@ -215,13 +224,14 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                     color: colorScheme.outline.withAlpha(60),
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(
                   children: [
                     Icon(
                       Icons.star_rounded,
-                      color: _isFeatured 
-                          ? Colors.amber 
+                      color: _isFeatured
+                          ? Colors.amber
                           : colorScheme.onSurface.withAlpha(150),
                     ),
                     const SizedBox(width: 12),
@@ -307,6 +317,34 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                   return null;
                 },
               ),
+
+              // Location Field
+              _buildTextField(
+                controller: _latitudeController,
+                label: 'Latitude',
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                icon: Icons.map_sharp,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter latitude';
+                  }
+                  return null;
+                },
+              ),
+              // Location Field
+              _buildTextField(
+                controller: _longitudeController,
+                label: 'Longitude',
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                icon: Icons.map_sharp,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter longitude';
+                  }
+                  return null;
+                },
+              ),
+
               const SizedBox(height: 16),
 
               // Price & Category Row
@@ -319,7 +357,8 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                       icon: Icons.attach_money_rounded,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}')),
                       ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
