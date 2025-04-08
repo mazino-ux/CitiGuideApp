@@ -1,15 +1,17 @@
 import 'package:citi_guide_app/presentation/explore/city_details_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:citi_guide_app/presentation/home/widgets/search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:citi_guide_app/models/city.dart';
 
 class HeroSection extends StatelessWidget {
   final String city;
   final String image;
   final String description;
-  final List<Map<String, dynamic>> cities;
-  final Function(Map<String, dynamic>) onCitySelected;
+  final List<City> cities;
+  final Function(City) onCitySelected;
 
   const HeroSection({
     super.key,
@@ -19,6 +21,14 @@ class HeroSection extends StatelessWidget {
     required this.cities,
     required this.onCitySelected,
   });
+
+   List<Map<String, String>> _convertCitiesForSearch(List<City> cities) {
+    return cities.map((city) => {
+      'name': city.name,
+      'image': city.imageUrl ?? '',
+      'description': city.description ?? ''
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +42,6 @@ class HeroSection extends StatelessWidget {
     final double factor = isMobile ? 1.0 : (isTablet ? 0.8 : 0.65);
 
     // Responsive sizes using the factor.
-    // final double heroHeight = (screenSize.height - 60.h) * factor;
     final double arrowIconSize = 30.w * factor;
     final double searchIconSize = 20.w * factor;
     final double cityFontSize = 48.sp * factor;
@@ -43,14 +52,14 @@ class HeroSection extends StatelessWidget {
     final EdgeInsets bottomPadding = EdgeInsets.only(bottom: 20.h * factor);
 
     // Find current index for navigation arrows.
-    final currentIndex = cities.indexWhere((c) => c['name'] == city);
+    final currentIndex = cities.indexWhere((c) => c.name == city);
 
     return Container(
       height: (screenSize.height - 60.h),
       width: screenSize.width,
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage(image),
+          image: NetworkImage(image),
           fit: BoxFit.cover,
         ),
       ),
@@ -70,11 +79,9 @@ class HeroSection extends StatelessWidget {
                 showSearch(
                   context: context,
                   delegate: HomeSearchBar(
-                    cities: cities
-                        .map((city) => city.map(
-                            (key, value) => MapEntry(key, value.toString())))
-                        .toList(),
+                    cities: _convertCitiesForSearch(cities),
                   ),
+                
                 );
               },
             ),
@@ -158,10 +165,10 @@ class HeroSection extends StatelessWidget {
                   itemCount: cities.length,
                   separatorBuilder: (_, __) => SizedBox(width: 12.w * factor),
                   itemBuilder: (context, index) {
-                    final c = cities[index];
-                    final isSelected = c['name'] == city;
+                    final cityItem = cities[index];
+                    final isSelected = cityItem.name == city;
                     return GestureDetector(
-                      onTap: () => onCitySelected(c),
+                      onTap: () => onCitySelected(cityItem),
                       child: Container(
                         width: isDesktop ? 40.w : thumbnailWidth,
                         decoration: BoxDecoration(
@@ -182,12 +189,17 @@ class HeroSection extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8.r),
                           child: Stack(
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: AssetImage(c['image']!),
-                                    fit: BoxFit.cover,
-                                  ),
+                              CachedNetworkImage(
+                                imageUrl: cityItem.imageUrl ?? '',
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                placeholder: (context, url) => Container(
+                                  color: Colors.grey[300],
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.broken_image),
                                 ),
                               ),
                               Positioned.fill(
@@ -204,7 +216,7 @@ class HeroSection extends StatelessWidget {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          c['name']!,
+                                          cityItem.name,
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             color: Colors.white,
@@ -218,7 +230,7 @@ class HeroSection extends StatelessWidget {
                                       InkWell(
                                         onTap: () {
                                           Get.to(() => CityScreen(
-                                                city: c,
+                                                city: cityItem.toMap(),
                                               ));
                                         },
                                         child: Icon(

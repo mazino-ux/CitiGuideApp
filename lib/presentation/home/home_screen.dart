@@ -1,14 +1,17 @@
-import 'package:citi_guide_app/data/city_data.dart';
+import 'package:citi_guide_app/core/services/city_service.dart';
+import 'package:citi_guide_app/models/city.dart';
+import 'package:citi_guide_app/presentation/city/city_attractions_screen.dart';
 import 'package:citi_guide_app/presentation/home/widgets/faq_widget.dart';
 import 'package:citi_guide_app/presentation/home/widgets/navbar/navbar.dart';
 import 'package:citi_guide_app/presentation/home/widgets/search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'widgets/hero_section.dart';
 import 'widgets/featured_attractions.dart';
 import 'widgets/footer.dart';
-import 'package:citi_guide_app/presentation/city/city_attractions_screen.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,73 +21,83 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final CityService _cityService = CityService();
   bool _isLoading = true;
-  List<Map<String, dynamic>> _filteredCities = [];
-  Map<String, dynamic>? _selectedCity;
-  String _citySearchQuery = '';
+  bool _hasError = false;
+  List<City> _cities = [];
+  List<City> _filteredCities = [];
+  String _searchQuery = '';
   String _selectedCategory = 'All';
-  final List<String> _categories = ['All', 'Popular', 'Featured', 'Recent'];
+  final List<String> _categories = ['All', 'Recent']; // Simplified categories
+  City? _selectedCity;
+  bool isAdmin = true;
 
   @override
   void initState() {
     super.initState();
-    _filteredCities = List.from(cities);
-    _selectedCity = _filteredCities.isNotEmpty ? _filteredCities[0] : null;
+    _fetchCities();
+  }
 
-    Future.delayed(const Duration(seconds: 2), () {
+  Future<void> _fetchCities() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    try {
+      final cities = await _cityService.getCities();
       setState(() {
+        _cities = cities;
+        _filteredCities = cities;
+        _selectedCity = cities.isNotEmpty ? cities[0] : null;
         _isLoading = false;
       });
-    });
-  }
-
-  void _filterCities(String query) {
-    setState(() {
-      _filteredCities = cities
-          .where((city) => city['name']
-              .toString()
-              .toLowerCase()
-              .contains(query.toLowerCase()))
-          .toList();
-
-      if (!_filteredCities.contains(_selectedCity)) {
-        _selectedCity = _filteredCities.isNotEmpty ? _filteredCities[0] : null;
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load cities: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-    });
+    }
   }
 
-  void _filterCitySection() {
-    setState(() {
-      _filteredCities = cities.where((city) {
-        final matchesSearch = city['name']
-            .toString()
+  void _filterCities() {
+    setState(() { 
+      _filteredCities = _cities.where((city) {
+        final matchesSearch = city.name
             .toLowerCase()
-            .contains(_citySearchQuery.toLowerCase());
+            .contains(_searchQuery.toLowerCase());
         final matchesCategory = _selectedCategory == 'All' ||
-            (_selectedCategory == 'Popular' && (city['isPopular'] == true)) ||
-            (_selectedCategory == 'Featured' && (city['isFeatured'] == true)) ||
             (_selectedCategory == 'Recent' && _isRecent(city));
         return matchesSearch && matchesCategory;
       }).toList();
     });
   }
 
-  bool _isRecent(Map<String, dynamic> city) {
-    final createdAt = DateTime.parse(city['created_at']);
-    return createdAt.isAfter(DateTime.now().subtract(const Duration(days: 30)));
+  bool _isRecent(City city) {
+    return city.createdAt.isAfter(
+      DateTime.now().subtract(const Duration(days: 30)),
+    );
   }
 
-  void _onCitySelected(Map<String, dynamic> city) {
+  void _onCitySelected(City city) {
     setState(() {
       _selectedCity = city;
     });
   }
 
-  void _navigateToCityAttractions(BuildContext context, Map<String, dynamic> city) {
+  void _navigateToCityAttractions(City city) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CityAttractionsScreen(city: city),
+        builder: (context) => CityAttractionsScreen(city: city.toMap()),
       ),
     );
   }
@@ -93,18 +106,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await showSearch<String>(
       context: context,
       delegate: HomeSearchBar(
-        cities: cities
-            .map((city) =>
-                city.map((key, value) => MapEntry(key, value.toString())))
+        cities: _cities
+            .map((city) => {'name': city.name, 'image': city.imageUrl ?? ''})
             .toList(),
       ),
     );
     if (result != null && result.isNotEmpty) {
-      _filterCities(result);
+      setState(() {
+        _searchQuery = result;
+        _filterCities();
+      });
     }
   }
-
-  bool isAdmin = true;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: _openSearch,
           child: Navbar(
             isAdmin: isAdmin,
-            cities: cities,
+            cities: _cities.map((city) => city.toMap()).toList(),
           ),
         ),
       ),
@@ -130,147 +143,189 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 200.h,
               ),
             )
-          : SingleChildScrollView(
-              child: Column(
-                children: [
-                  if (_selectedCity != null)
-                    HeroSection(
-                      city: _selectedCity!['name']!,
-                      image: _selectedCity!['image']!,
-                      description: _selectedCity!['description']!,
-                      cities: _filteredCities,
-                      onCitySelected: _onCitySelected,
-                    ),
-                  SizedBox(height: 20.h),
-                  
-                  // Cities Section
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Explore Cities',
-                          style: TextStyle(
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.bold,
+          : _hasError
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 60.w, color: Colors.red[300]),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'Failed to load cities',
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          color: Colors.red[700],
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      ElevatedButton(
+                        onPressed: _fetchCities,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[100],
+                          foregroundColor: Colors.red[700],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        SizedBox(height: 16.h),
-                        
-                        // Search and Filter Bar
-                        Column(
+                        child: const Text('Try Again'),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      if (_selectedCity != null)
+                      HeroSection(
+                        city: _selectedCity?.name ?? '',
+                        image: _selectedCity?.imageUrl ?? '',
+                        description: _selectedCity?.description ?? '',
+                        cities: _cities, // Now passing List<City> directly
+                        onCitySelected: (city) {
+                          _onCitySelected(city);
+                        },
+                      ),
+                      SizedBox(height: 20.h),
+                      
+                      // Cities Section
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextField(
-                              decoration: InputDecoration(
-                                hintText: 'Search cities...',
-                                prefixIcon: const Icon(Icons.search),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                filled: true,
-                                contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                            Text(
+                              'Explore Cities',
+                              style: TextStyle(
+                                fontSize: 24.sp,
+                                fontWeight: FontWeight.bold,
                               ),
-                              onChanged: (value) {
-                                setState(() {
-                                  _citySearchQuery = value;
-                                  _filterCitySection();
-                                });
-                              },
                             ),
-                            SizedBox(height: 12.h),
+                            SizedBox(height: 16.h),
                             
-                            // Category Filter Chips
-                            SizedBox(
-                              height: 50.h,
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: _categories.length,
-                                separatorBuilder: (_, __) => SizedBox(width: 8.w),
-                                itemBuilder: (context, index) {
-                                  final category = _categories[index];
-                                  return ChoiceChip(
-                                    label: Text(category),
-                                    selected: _selectedCategory == category,
-                                    selectedColor: Theme.of(context).colorScheme.primary,
-                                    labelStyle: TextStyle(
-                                      color: _selectedCategory == category
-                                          ? Colors.white
-                                          : Theme.of(context).colorScheme.onSurface,
+                            // Search and Filter Bar
+                            Column(
+                              children: [
+                                TextField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Search cities...',
+                                    prefixIcon: const Icon(Icons.search),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    onSelected: (selected) {
-                                      setState(() {
-                                        _selectedCategory = selected ? category : 'All';
-                                        _filterCitySection();
-                                      });
+                                    filled: true,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _searchQuery = value;
+                                      _filterCities();
+                                    });
+                                  },
+                                ),
+                                SizedBox(height: 12.h),
+                                
+                                // Category Filter Chips
+                                SizedBox(
+                                  height: 50.h,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: _categories.length,
+                                    separatorBuilder: (_, __) => SizedBox(width: 8.w),
+                                    itemBuilder: (context, index) {
+                                      final category = _categories[index];
+                                      return ChoiceChip(
+                                        label: Text(category),
+                                        selected: _selectedCategory == category,
+                                        selectedColor: Theme.of(context).colorScheme.primary,
+                                        labelStyle: TextStyle(
+                                          color: _selectedCategory == category
+                                              ? Colors.white
+                                              : Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                        onSelected: (selected) {
+                                          setState(() {
+                                            _selectedCategory = selected ? category : 'All';
+                                            _filterCities();
+                                          });
+                                        },
+                                      );
                                     },
-                                  );
-                                },
-                              ),
+                                  ),
+                                ),
+                              ],
                             ),
+                            SizedBox(height: 16.h),
+                            
+                            // City Cards Grid
+                            _filteredCities.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.location_city,
+                                          size: 60.w,
+                                          color: Colors.grey[400],
+                                        ),
+                                        SizedBox(height: 16.h),
+                                        Text(
+                                          'No cities found',
+                                          style: TextStyle(
+                                            fontSize: 18.sp,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : AnimationLimiter(
+                                    child: GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        crossAxisSpacing: 16.w,
+                                        mainAxisSpacing: 16.h,
+                                        childAspectRatio: 0.8,
+                                      ),
+                                      itemCount: _filteredCities.length,
+                                      itemBuilder: (context, index) {
+                                        final city = _filteredCities[index];
+                                        return AnimationConfiguration.staggeredGrid(
+                                          position: index,
+                                          duration: const Duration(milliseconds: 500),
+                                          columnCount: crossAxisCount,
+                                          child: ScaleAnimation(
+                                            child: FadeInAnimation(
+                                              child: _CityCard(
+                                                city: city,
+                                                onTap: () => _navigateToCityAttractions(city),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
                           ],
                         ),
-                        SizedBox(height: 16.h),
-                        
-                        // City Cards Grid
-                        _filteredCities.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.location_city,
-                                      size: 60.w,
-                                      color: Colors.grey[400],
-                                    ),
-                                    SizedBox(height: 16.h),
-                                    Text(
-                                      'No cities found',
-                                      style: TextStyle(
-                                        fontSize: 18.sp,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  crossAxisSpacing: 16.w,
-                                  mainAxisSpacing: 16.h,
-                                  childAspectRatio: 0.8,
-                                ),
-                                itemCount: _filteredCities.length,
-                                itemBuilder: (context, index) {
-                                  final city = _filteredCities[index];
-                                  return _CityCard(
-                                    city: city,
-                                    onTap: () => _navigateToCityAttractions(context, city),
-                                  );
-                                },
-                              ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(height: 20.h),
+                      
+                      FeaturedAttractions(),
+                      SizedBox(height: 20.h),
+                      const FAQWidget(),
+                      SizedBox(height: 20.h),
+                      Footer(),
+                    ],
                   ),
-                  SizedBox(height: 20.h),
-                  
-                  FeaturedAttractions(),
-                  SizedBox(height: 20.h),
-                  const FAQWidget(),
-                  SizedBox(height: 20.h),
-                  Footer(),
-                ],
-              ),
-            ),
+                ),
     );
   }
 }
 
 class _CityCard extends StatelessWidget {
-  final Map<String, dynamic> city;
+  final City city;
   final VoidCallback onTap;
 
   const _CityCard({
@@ -298,25 +353,23 @@ class _CityCard extends StatelessWidget {
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  city['image'],
+                child: CachedNetworkImage(
+                  imageUrl: city.imageUrl ?? '', // Handle null imageUrl
                   fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Center(
+                  placeholder: (context, url) => Container(
+                    color: colorScheme.surfaceContainerHighest,
+                    child: Center(
                       child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                            : null,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.primary,
+                        ),
                       ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: colorScheme.surfaceContainerHighest,
-                      child: const Center(child: Icon(Icons.broken_image)),
-                    );
-                  },
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: colorScheme.surfaceContainerHighest,
+                    child: const Center(child: Icon(Icons.broken_image)),
+                  ),
                 ),
               ),
             ),
@@ -327,7 +380,7 @@ class _CityCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    city['name'],
+                    city.name,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -335,54 +388,29 @@ class _CityCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.place,
-                        size: 16.w,
-                        color: colorScheme.onSurface.withAlpha(180),
-                      ),
-                      SizedBox(width: 4.w),
-                      Expanded(
-                        child: Text(
-                          city['location'] ?? 'Unknown location',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withAlpha(180),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    city.description ?? 'No description available',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withAlpha(180),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 8.h),
                   Row(
                     children: [
                       Icon(
-                        Icons.star,
+                        Icons.calendar_today,
                         size: 16.w,
-                        color: Colors.amber,
+                        color: colorScheme.onSurface.withAlpha(180),
                       ),
                       SizedBox(width: 4.w),
                       Text(
-                        city['rating']?.toStringAsFixed(1) ?? '0.0',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      const Spacer(),
-                      if (city['isFeatured'] == true)
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary.withAlpha(80),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'Featured',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colorScheme.primary,
-                            ),
-                          ),
+                        'Added ${_formatDate(city.createdAt)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface.withAlpha(180),
                         ),
+                      ),
                     ],
                   ),
                 ],
@@ -392,5 +420,20 @@ class _CityCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays > 30) {
+      return '${(difference.inDays / 30).floor()} months ago';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays} days ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} hours ago';
+    } else {
+      return 'just now';
+    }
   }
 }

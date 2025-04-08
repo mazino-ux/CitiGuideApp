@@ -1,7 +1,9 @@
 import 'package:citi_guide_app/presentation/admin/admin_dashboard.dart';
 import 'package:citi_guide_app/presentation/admin/screens/cities_screen.dart'; // Add this import
 import 'package:citi_guide_app/presentation/admin/screens/attractions.dart';
+import 'package:citi_guide_app/presentation/help_support_screen.dart';
 import 'package:citi_guide_app/presentation/home/home_screen.dart';
+import 'package:citi_guide_app/presentation/profiles/profile_screen.dart';
 import 'package:flutter/material.dart';
 
 class AdminDrawer extends StatefulWidget {
@@ -113,30 +115,19 @@ class _AdminDrawerState extends State<AdminDrawer> {
               );
             },
           ),
+          
           _DrawerItem(
             icon: Icons.settings,
             title: 'Settings',
             isSelected: selectedItem == 'Settings',
-            onTap: () {
-              // You'll need to implement SettingsScreen
-              // _navigateTo(context, 'Settings', const SettingsScreen());
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings screen coming soon')),
-              );
-            },
+            onTap: () => _navigateTo(context, 'profile', const ProfileScreen()),
           ),
           const Divider(),
           _DrawerItem(
             icon: Icons.help,
             title: 'Help & Support',
             isSelected: selectedItem == 'Help & Support',
-            onTap: () {
-              // You'll need to implement HelpScreen
-              // _navigateTo(context, 'Help & Support', const HelpScreen());
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Help screen coming soon')),
-              );
-            },
+            onTap: () => _navigateTo(context, 'Help & Support', const HelpSupportScreen()),
           ),
         ],
       ),

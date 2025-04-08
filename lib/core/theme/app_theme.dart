@@ -42,7 +42,7 @@ class AppTheme {
 
   static final ThemeData darkTheme = ThemeData(
     colorScheme: ColorScheme.dark(
-      primary: darkPrimary,
+      primary: const Color.fromARGB(255, 82, 19, 159),
       secondary: darkAccent,
       surface: darkBackground,
     ),

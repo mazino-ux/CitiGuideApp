@@ -15,6 +15,8 @@ class CityScreenMain extends StatefulWidget {
 }
 
 class _CityScreenMainState extends State<CityScreenMain> {
+
+  
   final CityService _cityService = CityService();
   bool _isLoading = true;
   bool _hasError = false;
@@ -254,6 +256,8 @@ class _CityScreenMainState extends State<CityScreenMain> {
                 ),
     );
   }
+
+
 }
 
 class _CityCard extends StatelessWidget {
@@ -369,3 +373,5 @@ class _CityCard extends StatelessWidget {
     }
   }
 }
+
+
