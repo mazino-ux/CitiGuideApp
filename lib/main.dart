@@ -48,7 +48,7 @@ class MainApp extends StatelessWidget {
                 debugShowCheckedModeBanner: false,
                 home: const App(),
                 routes: {
-                  '/faq': (context) => const FAQPage(), // Add FAQ route
+                  '/faq': (context) => const FAQPage(),
                 },
               );
             },
