@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'widgets/about_section.dart';
 import 'widgets/contact_section.dart';
-import 'widgets/gallery_section.dart';
+// import 'widgets/gallery_section.dart';
 import 'widgets/header_section.dart';
 import 'widgets/info_chips.dart';
 import 'widgets/location_map.dart';
@@ -66,14 +67,10 @@ class _AttractionDetailState extends State<AttractionDetail> {
   }
 
   Future<Map<String, dynamic>> _fetchAttraction() async {
-    return await _supabase
-        .from('attractions')
-        .select('''
+    return await _supabase.from('attractions').select('''
           *,
           cities:city_id(name)
-        ''')
-        .eq('id', widget.attractionId)
-        .single();
+        ''').eq('id', widget.attractionId).single();
   }
 
   Future<List<String>> _fetchImages() async {
@@ -113,15 +110,17 @@ class _AttractionDetailState extends State<AttractionDetail> {
         slivers: [
           HeaderSection(
             attraction: _attraction!,
-            primaryImage: _images.isNotEmpty ? _images.first : _attraction!['image_url'],
+            primaryImage:
+                _images.isNotEmpty ? _images.first : _attraction!['image_url'],
           ),
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Gallery Section
-                GallerySection(images: _images),
-                const SizedBox(height: 24),
+                // // Gallery Section
+                // GallerySection(images: _images),
+                // const SizedBox(height: 24),
+
 
                 // Info Chips
                 InfoChips(
@@ -129,11 +128,11 @@ class _AttractionDetailState extends State<AttractionDetail> {
                   openingHours: _attraction!['opening_hours'],
                   isFeatured: _attraction!['is_featured'] ?? false,
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
                 // About Section
                 AboutSection(description: _attraction!['description']),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
                 // Location Map
                 LocationMap(
@@ -141,28 +140,27 @@ class _AttractionDetailState extends State<AttractionDetail> {
                   latitude: _attraction!['latitude'],
                   longitude: _attraction!['longitude'],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
                 // Contact Section
                 ContactSection(
                   website: _attraction!['website'],
                   phone: _attraction!['phone'],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
                 // Reviews Section
                 ReviewsSection(
                   reviews: _reviews,
-                  onReviewUpdated: _fetchData, // Refresh when review is updated
-                  onReviewDeleted: _fetchData, // Refresh when review is deleted
+                  onReviewUpdated: _fetchData,
+                  onReviewDeleted: _fetchData,
                 ),
 
-                // Keep the ReviewForm as is
                 ReviewForm(
                   attractionId: widget.attractionId,
                   onReviewSubmitted: _fetchData,
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
               ]),
             ),
           ),
@@ -178,11 +176,12 @@ class _AttractionDetailState extends State<AttractionDetail> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Text(
               'Loading attraction details...',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withAlpha(258),
+                    color:
+                        Theme.of(context).colorScheme.onSurface.withAlpha(258),
                   ),
             ),
           ],
@@ -214,7 +213,8 @@ class _AttractionDetailState extends State<AttractionDetail> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text('Try Again'),
             ),

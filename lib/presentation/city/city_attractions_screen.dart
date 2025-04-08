@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:citi_guide_app/core/services/attraction_service.dart';
 import 'package:citi_guide_app/models/attraction.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CityAttractionsScreen extends StatefulWidget {
   final Map<String, dynamic> city;
@@ -23,13 +24,53 @@ class _CityAttractionsScreenState extends State<CityAttractionsScreen> {
   String _searchQuery = '';
   String _selectedCategory = 'All';
   String _selectedSort = 'Rating';
-  final List<String> _categories = ['All', 'Landmark', 'Museum', 'Park', 'Restaurant'];
+  final _supabase = Supabase.instance.client;
+  List<String> _categories = [];
   final List<String> _sortOptions = ['Rating', 'Recent', 'Name'];
 
   @override
   void initState() {
     super.initState();
+    _fetchCategories();
     _fetchAttractions();
+  }
+
+  Future<void> _fetchCategories() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    try {
+      // Fetch from Supabase
+      final response = await _supabase.from('categories').select('*');
+      // This gives us a List<dynamic> of dynamic maps
+      final rawCategories = List<Map<String, dynamic>>.from(response);
+
+      if (mounted) {
+        setState(() {
+          _categories = ['All'] +
+              rawCategories.map((cat) => cat['name'].toString()).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load categories: $e'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _fetchAttractions() async {
@@ -39,7 +80,8 @@ class _CityAttractionsScreenState extends State<CityAttractionsScreen> {
     });
 
     try {
-      final attractions = await _attractionService.getAttractionsByCity(widget.city['id']);
+      final attractions =
+          await _attractionService.getAttractionsByCity(widget.city['id']);
       setState(() {
         _attractions = attractions;
         _filteredAttractions = attractions;
@@ -63,14 +105,14 @@ class _CityAttractionsScreenState extends State<CityAttractionsScreen> {
   }
 
   void _filterAndSortAttractions() {
-    // Filter by search query and category
     List<Attraction> filtered = _attractions.where((attraction) {
-      final matchesSearch = attraction.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesCategory = _selectedCategory == 'All' || attraction.category == _selectedCategory;
+      final matchesSearch =
+          attraction.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCategory = _selectedCategory == 'All' ||
+          attraction.category == _selectedCategory;
       return matchesSearch && matchesCategory;
     }).toList();
 
-    // Sort the results
     filtered.sort((a, b) {
       switch (_selectedSort) {
         case 'Rating':
@@ -92,31 +134,47 @@ class _CityAttractionsScreenState extends State<CityAttractionsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // final colorScheme = theme.colorScheme;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth < 600;
+    final bool isTablet = screenWidth >= 600 && screenWidth < 1100;
+    final bool isDesktop = screenWidth >= 1100;
+
+    final double factor = isMobile ? 1.0 : (isTablet ? 0.8 : 0.65);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: EdgeInsets.all(10.w),
-            decoration: BoxDecoration(
-              color: Colors.black.withAlpha(160),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.arrow_back, color: Colors.white, size: 20.w),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: CustomScrollView(
         slivers: [
-          // City Header Image
           SliverAppBar(
-            expandedHeight: 250.h,
+            expandedHeight: isDesktop ? 270.h : 250.h * factor,
+            pinned: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
             flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              title: Container(
+                margin: EdgeInsets.only(
+                  top: 7.h,
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: 6.h,
+                  horizontal: 10.w,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(180),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Text(
+                  "Explore / ${widget.city['name']}",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isDesktop ? 5.sp : 16.sp * factor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
               background: CachedNetworkImage(
                 imageUrl: widget.city['image_url'] ?? '',
                 fit: BoxFit.cover,
@@ -199,10 +257,10 @@ class _CityAttractionsScreenState extends State<CityAttractionsScreen> {
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           value: _selectedCategory,
-                          items: _categories.map((category) {
-                            return DropdownMenuItem(
-                              value: category,
-                              child: Text(category),
+                          items: _categories.map((String catName) {
+                            return DropdownMenuItem<String>(
+                              value: catName,
+                              child: Text(catName),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -288,7 +346,8 @@ class _CityAttractionsScreenState extends State<CityAttractionsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, size: 48.w, color: Colors.red[300]),
+                    Icon(Icons.error_outline,
+                        size: 48.w, color: Colors.red[300]),
                     SizedBox(height: 16.h),
                     Text(
                       'Failed to load attractions',
@@ -328,19 +387,24 @@ class _CityAttractionsScreenState extends State<CityAttractionsScreen> {
             )
           else
             SliverPadding(
-              padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
-              sliver: SliverList(
+              padding: EdgeInsets.fromLTRB(2.w, 2.h, 2.w, 2.h),
+              sliver: SliverGrid(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final attraction = _filteredAttractions[index];
-                    return AnimationConfiguration.staggeredList(
+                    return AnimationConfiguration.staggeredGrid(
                       position: index,
                       duration: const Duration(milliseconds: 375),
+                      columnCount: isDesktop
+                          ? 4
+                          : isTablet
+                              ? 3
+                              : 2,
                       child: SlideAnimation(
                         verticalOffset: 50.0,
                         child: FadeInAnimation(
                           child: Padding(
-                            padding: EdgeInsets.only(bottom: 16.h),
+                            padding: EdgeInsets.all(8.w),
                             child: AttractionCard(attraction: attraction),
                           ),
                         ),
@@ -349,8 +413,18 @@ class _CityAttractionsScreenState extends State<CityAttractionsScreen> {
                   },
                   childCount: _filteredAttractions.length,
                 ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isDesktop
+                      ? 4
+                      : isTablet
+                          ? 3
+                          : 2,
+                  crossAxisSpacing: 16.0 * factor,
+                  mainAxisSpacing: 16.0 * factor,
+                  childAspectRatio: 0.75,
+                ),
               ),
-            ),
+            )
         ],
       ),
     );
@@ -364,121 +438,266 @@ class AttractionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final firstImage = attraction.images.isNotEmpty ? attraction.images[0] : attraction.imageUrl ?? '';
+    final double screenWidth = MediaQuery.of(context).size.width;
+    // final bool isMobile = screenWidth < 600;
+    final bool isTablet = screenWidth >= 600 && screenWidth < 1100;
+    final bool isDesktop = screenWidth >= 1100;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withAlpha(80),
-          width: 1,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16.r),
-        onTap: () {
-          // Handle attraction tap
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Attraction Image
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: CachedNetworkImage(
-                imageUrl: firstImage,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[200],
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[200],
-                  child: Icon(Icons.image_not_supported),
-                ),
-              ),
-            ),
-
-            // Attraction Info
-            Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      if (attraction.isFeatured)
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: Colors.amber,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'FEATURED',
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      if (attraction.isFeatured) SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          attraction.category,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    attraction.name,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8.h),
-                  Row(
-                    children: [
-                      Icon(
-                        FontAwesomeIcons.solidStar,
-                        size: 16.w,
-                        color: Colors.amber,
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        (attraction.rating?.toStringAsFixed(1) ?? '0.0'),
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        attraction.price != null ? '\$${attraction.price!.toStringAsFixed(2)}' : 'Free',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    attraction.description ?? '',
-                    style: theme.textTheme.bodyMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+    final firstImage = attraction.images.isNotEmpty
+        ? attraction.images[0]
+        : attraction.imageUrl ?? '';
+    return GestureDetector(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(isDesktop ? 10.r : 14.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(25),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(isDesktop ? 10.r : 14.r),
+          child: Stack(
+            children: [
+              // Background Image
+              Positioned.fill(
+                child: CachedNetworkImage(
+                  imageUrl: firstImage,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.primary.withAlpha(128),
+                        ),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[200],
+                    child: const Center(child: Icon(Icons.broken_image)),
+                  ),
+                ),
+              ),
+
+              // Gradient Overlay
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withAlpha(178),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Content
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: EdgeInsets.all(isDesktop ? 6.w : 10.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name
+                      Text(
+                        attraction.name,
+                        style: TextStyle(
+                          fontSize: isDesktop
+                              ? 7.sp
+                              : isTablet
+                                  ? 10.sp
+                                  : 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      SizedBox(height: 4.h),
+
+                      // Location
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: isDesktop
+                                ? 5.sp
+                                : isTablet
+                                    ? 10.sp
+                                    : 14.sp,
+                            color: Colors.white.withAlpha(204),
+                          ),
+                          SizedBox(width: isDesktop ? 2.w : 4.w),
+                          Expanded(
+                            child: Text(
+                              attraction.location!,
+                              style: TextStyle(
+                                fontSize: isDesktop
+                                    ? 5.sp
+                                    : isTablet
+                                        ? 8.sp
+                                        : 12.sp,
+                                color: Colors.white.withAlpha(204),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(
+                          height: isDesktop
+                              ? 3.h
+                              : isTablet
+                                  ? 5.h
+                                  : 8.h),
+
+                      // Rating and Category
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Rating
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isDesktop
+                                  ? 3.w
+                                  : isTablet
+                                      ? 5.w
+                                      : 8.w,
+                              vertical: isDesktop
+                                  ? 2.h
+                                  : isTablet
+                                      ? 3.h
+                                      : 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.star,
+                                  size: isDesktop
+                                      ? 6.sp
+                                      : isTablet
+                                          ? 10.sp
+                                          : 14.sp,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  (attraction.rating?.toStringAsFixed(1) ??
+                                      '0.0'),
+                                  style: TextStyle(
+                                    fontSize: isDesktop
+                                        ? 5.sp
+                                        : isTablet
+                                            ? 8.sp
+                                            : 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Category
+                          if (attraction.category != null)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isDesktop
+                                    ? 3.w
+                                    : isTablet
+                                        ? 5.w
+                                        : 8.w,
+                                vertical: isDesktop
+                                    ? 2.h
+                                    : isTablet
+                                        ? 3.h
+                                        : 4.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(51),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withAlpha(76),
+                                ),
+                              ),
+                              child: Text(
+                                attraction.category,
+                                style: TextStyle(
+                                  fontSize: isDesktop
+                                      ? 5.sp
+                                      : isTablet
+                                          ? 7.sp
+                                          : 10.sp,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Featured Badge
+              if (attraction.isFeatured == true)
+                Positioned(
+                  top: 12.h,
+                  left: isDesktop ? 6.w : 12.w,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isDesktop
+                          ? 3.w
+                          : isTablet
+                              ? 5.w
+                              : 8.w,
+                      vertical: isDesktop
+                          ? 2.h
+                          : isTablet
+                              ? 3.h
+                              : 4.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.pinkAccent,
+                      borderRadius: BorderRadius.circular(6.r),
+                    ),
+                    child: Text(
+                      'Featured',
+                      style: TextStyle(
+                        fontSize: isDesktop
+                            ? 5.sp
+                            : isTablet
+                                ? 7.sp
+                                : 10.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
