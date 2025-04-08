@@ -122,6 +122,7 @@ final List<Map<String, dynamic>> cities = [
       },
     ],
   },
+  
   {
     'id': 2,
     'name': 'Rome',

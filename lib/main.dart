@@ -10,6 +10,7 @@ import 'package:citi_guide_app/core/theme/theme_provider.dart';
 import 'package:citi_guide_app/app.dart';
 import 'package:citi_guide_app/presentation/home/faq/faq_page.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

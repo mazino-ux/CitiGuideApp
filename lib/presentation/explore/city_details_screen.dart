@@ -1,4 +1,4 @@
-import 'package:citi_guide_app/presentation/attractions/attraction_detail.dart';
+import 'package:citi_guide_app/presentation/attractions/attraction_detail/attraction_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 class CityScreen extends StatelessWidget {
   final Map<String, dynamic> city;
 
-  const CityScreen({Key? key, required this.city}) : super(key: key);
+  const CityScreen({super.key, required this.city});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class CityScreen extends StatelessWidget {
                   horizontal: 10.w,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
+                  color: Colors.black.withAlpha(180),
                   borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Text(
@@ -64,7 +64,7 @@ class CityScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.black.withOpacity(0.6),
+                          Colors.black.withAlpha(180),
                           Colors.transparent,
                         ],
                         begin: Alignment.bottomCenter,
@@ -110,7 +110,7 @@ class CityScreen extends StatelessWidget {
                       : (attraction['images'] as String? ?? '');
                   return GestureDetector(
                     onTap: () {
-                      Get.to(() => AttractionDetail(attraction: attraction));
+                      Get.to(() => AttractionDetail(attractionId: attraction));
                     },
                     child: Container(
                       decoration: BoxDecoration(
@@ -129,7 +129,7 @@ class CityScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10.r),
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.black.withOpacity(0.7),
+                                  Colors.black.withAlpha(210),
                                   Colors.transparent,
                                 ],
                                 begin: Alignment.bottomCenter,
