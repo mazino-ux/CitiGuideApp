@@ -34,6 +34,8 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
   late final TextEditingController _hoursController;
   late final TextEditingController _websiteController;
   late final TextEditingController _phoneController;
+  late final TextEditingController _latitudeController;
+  late final TextEditingController _longitudeController;
 
   @override
   void initState() {
@@ -44,13 +46,23 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
 
   void _initializeControllers() {
     _nameController = TextEditingController(text: widget.attraction['name']);
-    _descriptionController = TextEditingController(text: widget.attraction['description']);
-    _locationController = TextEditingController(text: widget.attraction['location']);
-    _priceController = TextEditingController(text: widget.attraction['price']?.toString());
-    _categoryController = TextEditingController(text: widget.attraction['category']);
-    _hoursController = TextEditingController(text: widget.attraction['opening_hours']);
-    _websiteController = TextEditingController(text: widget.attraction['website']);
+    _descriptionController =
+        TextEditingController(text: widget.attraction['description']);
+    _locationController =
+        TextEditingController(text: widget.attraction['location']);
+    _priceController =
+        TextEditingController(text: widget.attraction['price']?.toString());
+    _categoryController =
+        TextEditingController(text: widget.attraction['category']);
+    _hoursController =
+        TextEditingController(text: widget.attraction['opening_hours']);
+    _websiteController =
+        TextEditingController(text: widget.attraction['website']);
     _phoneController = TextEditingController(text: widget.attraction['phone']);
+    _latitudeController =
+        TextEditingController(text: widget.attraction['latitude']);
+    _longitudeController =
+        TextEditingController(text: widget.attraction['longitude']);
   }
 
   @override
@@ -63,6 +75,8 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
     _hoursController.dispose();
     _websiteController.dispose();
     _phoneController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
     super.dispose();
   }
 
@@ -92,7 +106,8 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
   Future<String?> _uploadImage() async {
     if (_imageFile == null) return null;
 
-    final fileExtension = kIsWeb ? '.jpg' : '.${_imageFile.path.split('.').last}';
+    final fileExtension =
+        kIsWeb ? '.jpg' : '.${_imageFile.path.split('.').last}';
     final fileName = '${DateTime.now().millisecondsSinceEpoch}$fileExtension';
     final filePath = 'attractions/$fileName';
 
@@ -133,6 +148,8 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
         'website': _websiteController.text.trim(),
         'phone': _phoneController.text.trim(),
         'is_featured': _isFeatured,
+        'latitude': _latitudeController.text.trim(),
+        'longitude': _longitudeController.text.trim(),
         'updated_at': DateTime.now().toIso8601String(),
         if (imageUrl != null) 'image_url': imageUrl,
       };
@@ -211,7 +228,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
               // Image Picker Section
               _buildImagePicker(),
               const SizedBox(height: 24),
-              
+
               // Featured Toggle
               Card(
                 margin: EdgeInsets.zero,
@@ -236,7 +253,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Section Header
               Text(
                 'Basic Information',
@@ -245,7 +262,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Name Field
               _buildTextField(
                 controller: _nameController,
@@ -259,7 +276,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Description Field
               _buildTextField(
                 controller: _descriptionController,
@@ -277,7 +294,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              
+
               // Section Header
               Text(
                 'Location & Details',
@@ -286,7 +303,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Location Field
               _buildTextField(
                 controller: _locationController,
@@ -299,8 +316,36 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                   return null;
                 },
               ),
+
+              // Location Field
+              _buildTextField(
+                controller: _latitudeController,
+                label: 'Latitude',
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                icon: Icons.map_sharp,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter latitude';
+                  }
+                  return null;
+                },
+              ),
+              // Location Field
+              _buildTextField(
+                controller: _longitudeController,
+                label: 'Longitude',
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                icon: Icons.map_sharp,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter longitude';
+                  }
+                  return null;
+                },
+              ),
+
               const SizedBox(height: 16),
-              
+
               // Price & Category Row
               Row(
                 children: [
@@ -311,7 +356,8 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                       icon: Icons.attach_money_rounded,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}')),
                       ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -338,7 +384,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Hours Field
               _buildTextField(
                 controller: _hoursController,
@@ -347,7 +393,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 hintText: 'e.g. 9:00 AM - 5:00 PM',
               ),
               const SizedBox(height: 24),
-              
+
               // Section Header
               Text(
                 'Contact Information',
@@ -356,7 +402,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Website Field
               _buildTextField(
                 controller: _websiteController,
@@ -365,7 +411,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 16),
-              
+
               // Phone Field
               _buildTextField(
                 controller: _phoneController,
@@ -374,7 +420,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 32),
-              
+
               // Save Button
               SizedBox(
                 width: double.infinity,

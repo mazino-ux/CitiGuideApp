@@ -1,150 +1,277 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class AttractionCard extends StatelessWidget {
-  final String name;
-  final String image;
-  final double rating;
-  final String category;
-  final String location;
+  final Map<String, dynamic> attraction;
+  final VoidCallback onTap;
 
   const AttractionCard({
-    super.key,
-    required this.name,
-    required this.image,
-    required this.rating,
-    required this.category,
-    required this.location, required distance,
+    required this.attraction,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Define scale factors
-    double cardWidth;
-    double titleFontSize;
-    double ratingFontSize;
-    double iconSize;
-
-    if (screenWidth >= 1024) {
-      // Desktop
-      cardWidth = 100.w;
-      titleFontSize = 6.sp;
-      ratingFontSize = 6.sp;
-      iconSize = 7.sp;
-    } else if (screenWidth >= 600) {
-      // Tablet
-      cardWidth = 120.w;
-      titleFontSize = 10.sp;
-      ratingFontSize = 10.sp;
-      iconSize = 12.sp;
-    } else {
-      // Mobile
-      cardWidth = 150.w;
-      titleFontSize = 16.sp;
-      ratingFontSize = 14.sp;
-      iconSize = 14.sp;
-    }
-
-    return Container(
-      width: cardWidth,
-      margin: EdgeInsets.symmetric(horizontal: 8.w),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16.r),
-        image: DecorationImage(
-          image: AssetImage(image),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: image.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: image,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: Colors.grey[200],
-                        child: const Center(child: CircularProgressIndicator()),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey[200],
-                        child: const Icon(Icons.broken_image),
-                      ),
-                    )
-                  : Container(
-                      color: Colors.grey[200],
-                      child: const Center(child: Icon(Icons.image, size: 48)),
-                    ),
+    final double screenWidth = MediaQuery.of(context).size.width;
+    // final bool isMobile = screenWidth < 600;
+    final bool isTablet = screenWidth >= 600 && screenWidth < 1100;
+    final bool isDesktop = screenWidth >= 1100;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(isDesktop ? 10.r : 14.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(25),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: titleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  category,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        location,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(isDesktop ? 10.r : 14.r),
+          child: Stack(
+            children: [
+              // Background Image
+              Positioned.fill(
+                child: CachedNetworkImage(
+                  imageUrl: attraction['image_url'] ?? '',
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.primary.withAlpha(128),
                         ),
-                        maxLines: 1,
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[200],
+                    child: const Center(child: Icon(Icons.broken_image)),
+                  ),
+                ),
+              ),
+
+              // Gradient Overlay
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withAlpha(178),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Content
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: EdgeInsets.all(isDesktop ? 6.w : 10.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name
+                      Text(
+                        attraction['name'] ?? 'Unnamed Attraction',
+                        style: TextStyle(
+                          fontSize: isDesktop
+                              ? 7.sp
+                              : isTablet
+                                  ? 10.sp
+                                  : 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+
+                      SizedBox(height: 4.h),
+
+                      // Location
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: isDesktop
+                                ? 5.sp
+                                : isTablet
+                                    ? 10.sp
+                                    : 14.sp,
+                            color: Colors.white.withAlpha(204),
+                          ),
+                          SizedBox(width: isDesktop ? 2.w : 4.w),
+                          Expanded(
+                            child: Text(
+                              attraction['location'] ??
+                                  'Location not specified',
+                              style: TextStyle(
+                                fontSize: isDesktop
+                                    ? 5.sp
+                                    : isTablet
+                                        ? 8.sp
+                                        : 12.sp,
+                                color: Colors.white.withAlpha(204),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(
+                          height: isDesktop
+                              ? 3.h
+                              : isTablet
+                                  ? 5.h
+                                  : 8.h),
+
+                      // Rating and Category
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Rating
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isDesktop
+                                  ? 3.w
+                                  : isTablet
+                                      ? 5.w
+                                      : 8.w,
+                              vertical: isDesktop
+                                  ? 2.h
+                                  : isTablet
+                                      ? 3.h
+                                      : 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.star,
+                                  size: isDesktop
+                                      ? 6.sp
+                                      : isTablet
+                                          ? 10.sp
+                                          : 14.sp,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  (attraction['rating']?.toStringAsFixed(1) ??
+                                      '0.0'),
+                                  style: TextStyle(
+                                    fontSize: isDesktop
+                                        ? 5.sp
+                                        : isTablet
+                                            ? 8.sp
+                                            : 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Category
+                          if (attraction['category'] != null)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isDesktop
+                                    ? 3.w
+                                    : isTablet
+                                        ? 5.w
+                                        : 8.w,
+                                vertical: isDesktop
+                                    ? 2.h
+                                    : isTablet
+                                        ? 3.h
+                                        : 4.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(51),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withAlpha(76),
+                                ),
+                              ),
+                              child: Text(
+                                attraction['category'],
+                                style: TextStyle(
+                                  fontSize: isDesktop
+                                      ? 5.sp
+                                      : isTablet
+                                          ? 7.sp
+                                          : 10.sp,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star,
-                      color: Theme.of(context).colorScheme.secondary,
-                      size: iconSize,
+              ),
+
+              // Featured Badge
+              if (attraction['is_featured'] == true)
+                Positioned(
+                  top: 12.h,
+                  left: isDesktop ? 6.w : 12.w,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isDesktop
+                          ? 3.w
+                          : isTablet
+                              ? 5.w
+                              : 8.w,
+                      vertical: isDesktop
+                          ? 2.h
+                          : isTablet
+                              ? 3.h
+                              : 4.h,
                     ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      rating.toString(),
+                    decoration: BoxDecoration(
+                      color: Colors.pinkAccent,
+                      borderRadius: BorderRadius.circular(6.r),
+                    ),
+                    child: Text(
+                      'Featured',
                       style: TextStyle(
-                        fontSize: ratingFontSize,
+                        fontSize: isDesktop
+                            ? 5.sp
+                            : isTablet
+                                ? 7.sp
+                                : 10.sp,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ],
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

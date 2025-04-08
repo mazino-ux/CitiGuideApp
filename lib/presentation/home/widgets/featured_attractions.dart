@@ -1,7 +1,7 @@
 import 'package:citi_guide_app/presentation/attractions/attraction_detail/attraction_detail.dart';
+import 'package:citi_guide_app/widgets/attraction_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -33,16 +33,9 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
     try {
       final response = await _supabase
           .from('attractions')
-          .select('''
-            id, 
-            name, 
-            image_url, 
-            rating, 
-            category,
-            location,
-            description,
-            is_featured
-          ''')
+          .select(
+              '''id, name, image_url, rating, category, location, latitude, longitude, description, is_featured''')
+          .eq('is_featured', true)
           .order('rating', ascending: false)
           .limit(6);
 
@@ -88,8 +81,14 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth < 600;
+    final bool isTablet = screenWidth >= 600 && screenWidth < 1100;
+    final bool isDesktop = screenWidth >= 1100;
+    final double scaleFactor = isMobile ? 1.0 : (isTablet ? 0.8 : 0.5);
+
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.0.w * scaleFactor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -99,36 +98,55 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
               Text(
                 '✨ Top Attractions',
                 style: TextStyle(
-                  fontSize: 22.sp,
+                  fontSize: isDesktop
+                      ? 8.sp
+                      : isTablet
+                          ? 12.sp
+                          : 20.0.sp * scaleFactor,
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.refresh, size: 24.w),
+                icon: Icon(Icons.refresh,
+                    size: isDesktop
+                        ? 10.sp
+                        : isTablet
+                            ? 12.sp
+                            : 24.0.sp * scaleFactor),
                 onPressed: _fetchFeaturedAttractions,
               ),
             ],
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 8.0.h * scaleFactor),
           Text(
             'Discover the most loved places in the city',
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: isDesktop
+                  ? 6.sp
+                  : isTablet
+                      ? 10.sp
+                      : 14.0.sp * scaleFactor,
               color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
             ),
           ),
-          SizedBox(height: 20.h),
-          _buildAttractionsGrid(),
+          SizedBox(
+              height: isDesktop
+                  ? 12.h
+                  : isTablet
+                      ? 15.h
+                      : 20.0.h * scaleFactor),
+          _buildAttractionsGrid(scaleFactor, isDesktop, isTablet),
         ],
       ),
     );
   }
 
-  Widget _buildAttractionsGrid() {
+  Widget _buildAttractionsGrid(
+      double scaleFactor, bool isDesktop, bool isTablet) {
     if (_isLoading) {
       return SizedBox(
-        height: 250.h,
+        height: isDesktop ? 150.h : 250.h * scaleFactor,
         child: Center(
           child: CircularProgressIndicator(
             strokeWidth: 2,
@@ -142,33 +160,49 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
 
     if (_hasError) {
       return Container(
-        height: 200.h,
+        height: isDesktop ? 100.h : 200.h * scaleFactor,
         decoration: BoxDecoration(
           color: Colors.red[50],
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 40.w, color: Colors.red[300]),
-            SizedBox(height: 16.h),
+            Icon(Icons.error_outline,
+                size: isDesktop ? 20.sp : 40.sp * scaleFactor,
+                color: Colors.red[300]),
+            SizedBox(height: 16.0.h * scaleFactor),
             Text(
               'Oops! Something went wrong',
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: isDesktop
+                    ? 8.sp
+                    : isTablet
+                        ? 12.sp
+                        : 16.0.sp * scaleFactor,
                 color: Colors.red[700],
               ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 16.0.h * scaleFactor),
             ElevatedButton(
               onPressed: _fetchFeaturedAttractions,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[100],
                 foregroundColor: Colors.red[700],
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                padding: EdgeInsets.symmetric(
+                    horizontal: isDesktop
+                        ? 12.w
+                        : isTablet
+                            ? 15.w
+                            : 24.0.w * scaleFactor,
+                    vertical: isDesktop
+                        ? 8.h
+                        : isTablet
+                            ? 10.h
+                            : 12.0.h * scaleFactor),
               ),
               child: Text('Try Again'),
             ),
@@ -179,20 +213,30 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
 
     if (_attractions.isEmpty) {
       return Container(
-        height: 200.h,
+        height: isDesktop ? 100.h : 200.h * scaleFactor,
         decoration: BoxDecoration(
           color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 40.w, color: Colors.grey[400]),
-            SizedBox(height: 16.h),
+            Icon(Icons.search_off,
+                size: isDesktop
+                    ? 20.sp
+                    : isTablet
+                        ? 30.sp
+                        : 40.0.sp * scaleFactor,
+                color: Colors.grey[400]),
+            SizedBox(height: 16.0 * scaleFactor),
             Text(
               'No attractions found',
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: isDesktop
+                    ? 8.sp
+                    : isTablet
+                        ? 12.sp
+                        : 16.0 * scaleFactor,
                 color: Colors.grey[600],
               ),
             ),
@@ -206,9 +250,13 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16.w,
-          mainAxisSpacing: 16.h,
+          crossAxisCount: isDesktop
+              ? 4
+              : isTablet
+                  ? 3
+                  : 2,
+          crossAxisSpacing: 16.0 * scaleFactor,
+          mainAxisSpacing: 16.0 * scaleFactor,
           childAspectRatio: 0.75,
         ),
         itemCount: _attractions.length,
@@ -217,230 +265,23 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
           return AnimationConfiguration.staggeredGrid(
             position: index,
             duration: const Duration(milliseconds: 500),
-            columnCount: 2,
+            columnCount: isDesktop
+                ? 4
+                : isTablet
+                    ? 3
+                    : 2,
             child: ScaleAnimation(
               scale: 0.5,
               child: FadeInAnimation(
-                child: _AttractionCard(
+                child: AttractionCard(
                   attraction: attraction,
-                  onTap: () => _navigateToDetail(context, attraction['id'].toString()),
+                  onTap: () =>
+                      _navigateToDetail(context, attraction['id'].toString()),
                 ),
               ),
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _AttractionCard extends StatelessWidget {
-  final Map<String, dynamic> attraction;
-  final VoidCallback onTap;
-
-  const _AttractionCard({
-    required this.attraction,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(25),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            children: [
-              // Background Image
-              Positioned.fill(
-                child: CachedNetworkImage(
-                  imageUrl: attraction['image_url'] ?? '',
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.primary.withAlpha(128),
-                        ),
-                      ),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[200],
-                    child: const Center(child: Icon(Icons.broken_image)),
-                  ),
-                ),
-              ),
-              
-              // Gradient Overlay
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withAlpha(178),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Content
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Padding(
-                  padding: EdgeInsets.all(12.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name
-                      Text(
-                        attraction['name'] ?? 'Unnamed Attraction',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      
-                      SizedBox(height: 4.h),
-                      
-                      // Location
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 14.w,
-                            color: Colors.white.withAlpha(204),
-                          ),
-                          SizedBox(width: 4.w),
-                          Expanded(
-                            child: Text(
-                              attraction['location'] ?? 'Location not specified',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: Colors.white.withAlpha(204),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      SizedBox(height: 8.h),
-                      
-                      // Rating and Category
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Rating
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.w,
-                              vertical: 4.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.star,
-                                  size: 14.w,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  (attraction['rating']?.toStringAsFixed(1) ?? '0.0'),
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          
-                          // Category
-                          if (attraction['category'] != null)
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8.w,
-                                vertical: 4.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(51),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withAlpha(76),
-                                ),
-                              ),
-                              child: Text(
-                                attraction['category'],
-                                style: TextStyle(
-                                  fontSize: 10.sp,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              // Featured Badge
-              if (attraction['is_featured'] == true)
-                Positioned(
-                  top: 12.w,
-                  left: 12.w,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.pinkAccent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Featured',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }

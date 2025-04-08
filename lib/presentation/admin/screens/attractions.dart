@@ -1,3 +1,4 @@
+import 'package:citi_guide_app/presentation/attractions/attraction_detail/widgets/location_map.dart';
 import 'package:flutter/material.dart';
 import 'package:citi_guide_app/presentation/admin/screens/add_attraction_screen.dart';
 import 'package:citi_guide_app/presentation/admin/screens/edit_attraction_screen.dart';
@@ -23,7 +24,7 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
   @override
   void initState() {
     super.initState();
-    currentCityId = widget.cityId; 
+    currentCityId = widget.cityId;
     _fetchAttractions();
   }
 
@@ -120,7 +121,8 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text('Delete Attraction', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Delete Attraction',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         content: Text('Are you sure you want to delete "$name"?'),
         actions: [
           TextButton(
@@ -145,17 +147,20 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Explore Attractions', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Explore Attractions',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
+            icon: const Icon(Icons.add_circle_outline_rounded,
+                color: Colors.white),
             onPressed: () async {
               try {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddAttractionScreen(cityId: currentCityId),
+                    builder: (context) =>
+                        AddAttractionScreen(cityId: currentCityId),
                   ),
                 );
                 _fetchAttractions();
@@ -197,7 +202,8 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
+            Icon(Icons.error_outline_rounded,
+                size: 48, color: Colors.redAccent),
             const SizedBox(height: 16),
             const Text('Oops! Something went wrong'),
             const SizedBox(height: 16),
@@ -237,7 +243,8 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AddAttractionScreen(cityId: currentCityId),
+                      builder: (context) =>
+                          AddAttractionScreen(cityId: currentCityId),
                     ),
                   );
                   _fetchAttractions();
@@ -379,6 +386,12 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                         ],
                       ),
                       const SizedBox(height: 6),
+                      LocationMap(
+                        location: attraction['location'],
+                        latitude: attraction['latitude'],
+                        longitude: attraction['longitude'],
+                      ),
+                      const SizedBox(height: 6),
                       Row(
                         children: [
                           Icon(
@@ -420,7 +433,8 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit_rounded, size: 18, color: Colors.white),
+                      icon: const Icon(Icons.edit_rounded,
+                          size: 18, color: Colors.white),
                       onPressed: () async {
                         try {
                           await Navigator.push(
@@ -440,7 +454,8 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete_rounded, size: 18, color: Colors.white),
+                      icon: const Icon(Icons.delete_rounded,
+                          size: 18, color: Colors.white),
                       onPressed: () => _confirmDelete(
                         attraction['id'].toString(),
                         attraction['name'] ?? 'this attraction',
@@ -456,7 +471,8 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                 top: 8,
                 left: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.amber[700],
                     borderRadius: BorderRadius.circular(12),
@@ -471,7 +487,8 @@ class _AttractionsScreenState extends State<AttractionsScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.star_rounded, size: 14, color: Colors.white),
+                      const Icon(Icons.star_rounded,
+                          size: 14, color: Colors.white),
                       const SizedBox(width: 4),
                       const Text(
                         'FEATURED',

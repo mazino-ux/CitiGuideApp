@@ -1,4 +1,4 @@
-import 'package:citi_guide_app/presentation/explore/city_details_screen.dart';
+import 'package:citi_guide_app/presentation/city/city_attractions_screen.dart';
 import 'package:citi_guide_app/presentation/home/widgets/search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -50,7 +50,7 @@ class HeroSection extends StatelessWidget {
       width: screenSize.width,
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage(image),
+          image: NetworkImage(image),
           fit: BoxFit.cover,
         ),
       ),
@@ -185,7 +185,7 @@ class HeroSection extends StatelessWidget {
                               Container(
                                 decoration: BoxDecoration(
                                   image: DecorationImage(
-                                    image: AssetImage(c['image']!),
+                                    image: NetworkImage(c['image_url']!),
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -217,7 +217,7 @@ class HeroSection extends StatelessWidget {
                                       ),
                                       InkWell(
                                         onTap: () {
-                                          Get.to(() => CityScreen(
+                                          Get.to(() => CityAttractionsScreen(
                                                 city: c,
                                               ));
                                         },
