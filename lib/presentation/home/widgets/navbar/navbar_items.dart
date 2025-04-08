@@ -97,7 +97,7 @@ class _NavItem extends StatelessWidget {
 
   void _navigate(BuildContext context) {
     Get.toNamed(route, arguments: arguments);
-    if (isMobile) Navigator.pop(context);
+    // if (isMobile) Navigator.pop(context);
   }
 
   @override
