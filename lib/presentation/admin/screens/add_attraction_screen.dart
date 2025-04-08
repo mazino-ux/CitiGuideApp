@@ -318,6 +318,7 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                 },
               ),
 
+              const SizedBox(height: 24),
               // Location Field
               _buildTextField(
                 controller: _latitudeController,
@@ -331,6 +332,7 @@ class _AddAttractionScreenState extends State<AddAttractionScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 9),
               // Location Field
               _buildTextField(
                 controller: _longitudeController,

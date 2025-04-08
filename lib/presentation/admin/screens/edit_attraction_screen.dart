@@ -60,9 +60,9 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
         TextEditingController(text: widget.attraction['website']);
     _phoneController = TextEditingController(text: widget.attraction['phone']);
     _latitudeController =
-        TextEditingController(text: widget.attraction['latitude']);
+        TextEditingController(text: widget.attraction['latitude']?.toString());
     _longitudeController =
-        TextEditingController(text: widget.attraction['longitude']);
+        TextEditingController(text: widget.attraction['longitude']?.toString());
   }
 
   @override
@@ -316,6 +316,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
 
               // Location Field
               _buildTextField(
@@ -330,6 +331,7 @@ class _EditAttractionScreenState extends State<EditAttractionScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
               // Location Field
               _buildTextField(
                 controller: _longitudeController,
