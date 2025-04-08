@@ -15,7 +15,7 @@ class AttractionCard extends StatelessWidget {
     required this.image,
     required this.rating,
     required this.category,
-    required this.location, required distance, required void Function() onTap,
+    required this.location, required distance,
   });
 
   @override

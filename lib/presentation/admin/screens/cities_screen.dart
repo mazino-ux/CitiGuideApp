@@ -73,7 +73,6 @@ class _CitiesScreenState extends State<CitiesScreen> {
     );
   }
 
-  // ... rest of your existing code remains the same ...
   Widget _buildBody() {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_cities.isEmpty) return _buildEmptyState();

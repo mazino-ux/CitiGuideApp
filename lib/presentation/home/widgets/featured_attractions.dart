@@ -1,9 +1,9 @@
+import 'package:citi_guide_app/presentation/attractions/attraction_detail/attraction_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:citi_guide_app/widgets/attraction_card.dart';
-import 'package:citi_guide_app/presentation/attractions/attraction_detail/attraction_detail.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FeaturedAttractions extends StatefulWidget {
   const FeaturedAttractions({super.key});
@@ -44,7 +44,7 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
             is_featured
           ''')
           .order('rating', ascending: false)
-          .limit(6); // Get 6 attractions for 3 rows
+          .limit(6);
 
       setState(() {
         _attractions = List<Map<String, dynamic>>.from(response);
@@ -57,7 +57,13 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load attractions: $e')),
+          SnackBar(
+            content: Text('Failed to load attractions: $e'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
         );
       }
     }
@@ -66,10 +72,16 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
   void _navigateToDetail(BuildContext context, String attractionId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => AttractionDetail(
-          attractionId: attractionId,
-        ),
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 500),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            AttractionDetail(attractionId: attractionId),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
       ),
     );
   }
@@ -81,21 +93,32 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Top Attractions',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '✨ Top Attractions',
+                style: TextStyle(
+                  fontSize: 22.sp,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onBackground,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
+              ),
+              IconButton(
+                icon: Icon(Icons.refresh, size: 24.w),
+                onPressed: _fetchFeaturedAttractions,
+              ),
+            ],
           ),
           SizedBox(height: 8.h),
           Text(
-            'Discover the most popular places to visit',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                ),
+            'Discover the most loved places in the city',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
+            ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 20.h),
           _buildAttractionsGrid(),
         ],
       ),
@@ -104,29 +127,44 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
 
   Widget _buildAttractionsGrid() {
     if (_isLoading) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 40.h),
-          child: const CircularProgressIndicator(),
+      return SizedBox(
+        height: 250.h,
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
         ),
       );
     }
 
     if (_hasError) {
-      return Center(
+      return Container(
+        height: 200.h,
+        decoration: BoxDecoration(
+          color: Colors.red[50],
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: 40.h),
-            Icon(Icons.error_outline, size: 40.w, color: Colors.red),
+            Icon(Icons.error_outline, size: 40.w, color: Colors.red[300]),
             SizedBox(height: 16.h),
             Text(
-              'Failed to load attractions',
-              style: Theme.of(context).textTheme.bodyLarge,
+              'Oops! Something went wrong',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.red[700],
+              ),
             ),
             SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: _fetchFeaturedAttractions,
               style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[100],
+                foregroundColor: Colors.red[700],
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -140,15 +178,23 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
     }
 
     if (_attractions.isEmpty) {
-      return Center(
+      return Container(
+        height: 200.h,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: 40.h),
-            Icon(Icons.search_off, size: 40.w, color: Colors.grey),
+            Icon(Icons.search_off, size: 40.w, color: Colors.grey[400]),
             SizedBox(height: 16.h),
             Text(
               'No attractions found',
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.grey[600],
+              ),
             ),
           ],
         ),
@@ -173,21 +219,228 @@ class _FeaturedAttractionsState extends State<FeaturedAttractions> {
             duration: const Duration(milliseconds: 500),
             columnCount: 2,
             child: ScaleAnimation(
+              scale: 0.5,
               child: FadeInAnimation(
-                child: AttractionCard(
-                  name: attraction['name'] ?? 'Unnamed Attraction',
-                  image: attraction['image_url'] ?? '',
-                  rating: (attraction['rating'] as num?)?.toDouble() ?? 0.0,
-                  category: attraction['category'] ?? 'Unknown',
-                  location: attraction['location'] ?? 'Location not specified',
-                  distance: null,
-                  // isFeatured: attraction['is_featured'] ?? false,
+                child: _AttractionCard(
+                  attraction: attraction,
                   onTap: () => _navigateToDetail(context, attraction['id'].toString()),
                 ),
               ),
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _AttractionCard extends StatelessWidget {
+  final Map<String, dynamic> attraction;
+  final VoidCallback onTap;
+
+  const _AttractionCard({
+    required this.attraction,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(25),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              // Background Image
+              Positioned.fill(
+                child: CachedNetworkImage(
+                  imageUrl: attraction['image_url'] ?? '',
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.primary.withAlpha(128),
+                        ),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[200],
+                    child: const Center(child: Icon(Icons.broken_image)),
+                  ),
+                ),
+              ),
+              
+              // Gradient Overlay
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withAlpha(178),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Content
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: EdgeInsets.all(12.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name
+                      Text(
+                        attraction['name'] ?? 'Unnamed Attraction',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      
+                      SizedBox(height: 4.h),
+                      
+                      // Location
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: 14.w,
+                            color: Colors.white.withAlpha(204),
+                          ),
+                          SizedBox(width: 4.w),
+                          Expanded(
+                            child: Text(
+                              attraction['location'] ?? 'Location not specified',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.white.withAlpha(204),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      SizedBox(height: 8.h),
+                      
+                      // Rating and Category
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Rating
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.star,
+                                  size: 14.w,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  (attraction['rating']?.toStringAsFixed(1) ?? '0.0'),
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          // Category
+                          if (attraction['category'] != null)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 4.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(51),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withAlpha(76),
+                                ),
+                              ),
+                              child: Text(
+                                attraction['category'],
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Featured Badge
+              if (attraction['is_featured'] == true)
+                Positioned(
+                  top: 12.w,
+                  left: 12.w,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.pinkAccent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Featured',
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

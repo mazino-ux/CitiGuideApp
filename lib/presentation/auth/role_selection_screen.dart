@@ -143,7 +143,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   roleCardsLayout,
                   SizedBox(height: 40.h),
                   TextButton(
-                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                    onPressed: () => Navigator.pushNamed(context, '/home'),
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.symmetric(
                           horizontal: 24.w, vertical: 12.h),

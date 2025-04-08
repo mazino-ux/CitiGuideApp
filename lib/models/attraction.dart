@@ -1,59 +1,64 @@
+// attraction.dart
 class Attraction {
   final String id;
+  final String cityId;
   final String name;
-  final String imageUrl;
-  final double rating;
+  final String? description;
+  final String? location;
+  final String? imageUrl;
+  final double? rating;
+  final double? price;
+  final bool isFeatured;
   final String category;
-  final double distance;
-  final List<Review> reviews;
+  final DateTime createdAt;
+  final List<String> images;
 
   Attraction({
     required this.id,
+    required this.cityId,
     required this.name,
-    required this.imageUrl,
-    required this.rating,
-    required this.category,
-    required this.distance,
-    required this.reviews,
+    this.description,
+    this.location,
+    this.imageUrl,
+    this.rating,
+    this.price,
+    this.isFeatured = false,
+    this.category = 'General',
+    required this.createdAt,
+    this.images = const [],
   });
 
   factory Attraction.fromMap(Map<String, dynamic> map) {
     return Attraction(
-      id: map['id'] as String,
-      name: map['name'] as String,
-      imageUrl: map['image_url'] as String,
-      rating: (map['rating'] as num).toDouble(),
-      category: map['category'] as String,
-      distance: (map['distance'] as num).toDouble(),
-      reviews: (map['reviews'] as List<dynamic>?)
-          ?.map((r) => Review.fromMap(r))
-          .toList() ?? [],
+      id: map['id'] ?? '',
+      cityId: map['city_id'] ?? '',
+      name: map['name'] ?? '',
+      description: map['description'],
+      location: map['location'],
+      imageUrl: map['image_url'],
+      rating: map['rating']?.toDouble(),
+      price: map['price']?.toDouble(),
+      isFeatured: map['is_featured'] ?? false,
+      category: map['category'] ?? 'General',
+      createdAt: DateTime.parse(map['created_at']),
+      images: List<String>.from(map['images'] ?? []),
     );
   }
-}
 
-class Review {
-  final String id;
-  final int rating;
-  final String comment;
-  final String userName;
-  final String? userAvatar;
-
-  Review({
-    required this.id,
-    required this.rating,
-    required this.comment,
-    required this.userName,
-    this.userAvatar,
-  });
-
-  factory Review.fromMap(Map<String, dynamic> map) {
-    return Review(
-      id: map['id'] as String,
-      rating: map['rating'] as int,
-      comment: map['comment'] as String,
-      userName: (map['user'] as Map<String, dynamic>)['name'] as String,
-      userAvatar: (map['user'] as Map<String, dynamic>)['avatar_url'] as String?,
-    );
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'city_id': cityId,
+      'name': name,
+      'description': description,
+      'location': location,
+      'image_url': imageUrl,
+      'rating': rating,
+      'price': price,
+      'is_featured': isFeatured,
+      'category': category,
+      'created_at': createdAt.toIso8601String(),
+      'images': images,
+    };
   }
 }

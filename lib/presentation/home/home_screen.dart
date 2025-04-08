@@ -313,7 +313,7 @@ class _CityCard extends StatelessWidget {
                   },
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: colorScheme.surfaceVariant,
+                      color: colorScheme.surfaceContainerHighest,
                       child: const Center(child: Icon(Icons.broken_image)),
                     );
                   },
@@ -340,14 +340,14 @@ class _CityCard extends StatelessWidget {
                       Icon(
                         Icons.place,
                         size: 16.w,
-                        color: colorScheme.onSurface.withOpacity(0.6),
+                        color: colorScheme.onSurface.withAlpha(180),
                       ),
                       SizedBox(width: 4.w),
                       Expanded(
                         child: Text(
                           city['location'] ?? 'Unknown location',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.6),
+                            color: colorScheme.onSurface.withAlpha(180),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -373,7 +373,7 @@ class _CityCard extends StatelessWidget {
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                           decoration: BoxDecoration(
-                            color: colorScheme.primary.withOpacity(0.1),
+                            color: colorScheme.primary.withAlpha(80),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(

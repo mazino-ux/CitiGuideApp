@@ -2,16 +2,97 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:citi_guide_app/core/services/attraction_service.dart';
+import 'package:citi_guide_app/models/attraction.dart';
 
-class CityAttractionsScreen extends StatelessWidget {
+class CityAttractionsScreen extends StatefulWidget {
   final Map<String, dynamic> city;
-
   const CityAttractionsScreen({super.key, required this.city});
+
+  @override
+  State<CityAttractionsScreen> createState() => _CityAttractionsScreenState();
+}
+
+class _CityAttractionsScreenState extends State<CityAttractionsScreen> {
+  final AttractionService _attractionService = AttractionService();
+  List<Attraction> _attractions = [];
+  List<Attraction> _filteredAttractions = [];
+  bool _isLoading = true;
+  bool _hasError = false;
+  String _searchQuery = '';
+  String _selectedCategory = 'All';
+  String _selectedSort = 'Rating';
+  final List<String> _categories = ['All', 'Landmark', 'Museum', 'Park', 'Restaurant'];
+  final List<String> _sortOptions = ['Rating', 'Recent', 'Name'];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAttractions();
+  }
+
+  Future<void> _fetchAttractions() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    try {
+      final attractions = await _attractionService.getAttractionsByCity(widget.city['id']);
+      setState(() {
+        _attractions = attractions;
+        _filteredAttractions = attractions;
+        _isLoading = false;
+        _filterAndSortAttractions();
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load attractions: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _filterAndSortAttractions() {
+    // Filter by search query and category
+    List<Attraction> filtered = _attractions.where((attraction) {
+      final matchesSearch = attraction.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCategory = _selectedCategory == 'All' || attraction.category == _selectedCategory;
+      return matchesSearch && matchesCategory;
+    }).toList();
+
+    // Sort the results
+    filtered.sort((a, b) {
+      switch (_selectedSort) {
+        case 'Rating':
+          return (b.rating ?? 0).compareTo(a.rating ?? 0);
+        case 'Recent':
+          return b.createdAt.compareTo(a.createdAt);
+        case 'Name':
+          return a.name.compareTo(b.name);
+        default:
+          return 0;
+      }
+    });
+
+    setState(() {
+      _filteredAttractions = filtered;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final attractions = city['attractions'] as List<dynamic>? ?? [];
+    // final colorScheme = theme.colorScheme;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -22,7 +103,7 @@ class CityAttractionsScreen extends StatelessWidget {
           icon: Container(
             padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withAlpha(160),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.arrow_back, color: Colors.white, size: 20.w),
@@ -37,7 +118,7 @@ class CityAttractionsScreen extends StatelessWidget {
             expandedHeight: 250.h,
             flexibleSpace: FlexibleSpaceBar(
               background: CachedNetworkImage(
-                imageUrl: city['image'],
+                imageUrl: widget.city['image_url'] ?? '',
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
                   color: Colors.grey[200],
@@ -56,10 +137,10 @@ class CityAttractionsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    city['name'],
+                    widget.city['name'],
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onBackground,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -72,16 +153,16 @@ class CityAttractionsScreen extends StatelessWidget {
                       ),
                       SizedBox(width: 8.w),
                       Text(
-                        city['location'] ?? 'Unknown location',
+                        widget.city['location'] ?? 'Unknown location',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withAlpha(210),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    city['description'] ?? '',
+                    widget.city['description'] ?? '',
                     style: theme.textTheme.bodyLarge,
                   ),
                   SizedBox(height: 24.h),
@@ -90,7 +171,87 @@ class CityAttractionsScreen extends StatelessWidget {
             ),
           ),
 
-          // Attractions Section
+          // Filter and Search Section
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search attractions...',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                        _filterAndSortAttractions();
+                      });
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          items: _categories.map((category) {
+                            return DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedCategory = value!;
+                              _filterAndSortAttractions();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Category',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedSort,
+                          items: _sortOptions.map((option) {
+                            return DropdownMenuItem(
+                              value: option,
+                              child: Text(option),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedSort = value!;
+                              _filterAndSortAttractions();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Sort by',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+              ),
+            ),
+          ),
+
+          // Attractions Section Header
           SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
             sliver: SliverToBoxAdapter(
@@ -104,9 +265,9 @@ class CityAttractionsScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${attractions.length} places',
+                    '${_filteredAttractions.length} places',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withAlpha(180),
                     ),
                   ),
                 ],
@@ -114,23 +275,38 @@ class CityAttractionsScreen extends StatelessWidget {
             ),
           ),
 
-          if (attractions.isNotEmpty)
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final attraction = attractions[index];
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: AttractionCard(attraction: attraction),
-                    );
-                  },
-                  childCount: attractions.length,
+          // Attractions List
+          if (_isLoading)
+            SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_hasError)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 48.w, color: Colors.red[300]),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'Failed to load attractions',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        color: Colors.red[700],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    ElevatedButton(
+                      onPressed: _fetchAttractions,
+                      child: const Text('Try Again'),
+                    ),
+                  ],
                 ),
               ),
             )
-          else
+          else if (_filteredAttractions.isEmpty)
             SliverFillRemaining(
               child: Center(
                 child: Column(
@@ -149,6 +325,31 @@ class CityAttractionsScreen extends StatelessWidget {
                   ],
                 ),
               ),
+            )
+          else
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final attraction = _filteredAttractions[index];
+                    return AnimationConfiguration.staggeredList(
+                      position: index,
+                      duration: const Duration(milliseconds: 375),
+                      child: SlideAnimation(
+                        verticalOffset: 50.0,
+                        child: FadeInAnimation(
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 16.h),
+                            child: AttractionCard(attraction: attraction),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  childCount: _filteredAttractions.length,
+                ),
+              ),
             ),
         ],
       ),
@@ -157,22 +358,21 @@ class CityAttractionsScreen extends StatelessWidget {
 }
 
 class AttractionCard extends StatelessWidget {
-  final dynamic attraction;
+  final Attraction attraction;
 
   const AttractionCard({super.key, required this.attraction});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final images = attraction['images'] as List<dynamic>? ?? [];
-    final firstImage = images.isNotEmpty ? images[0] : '';
+    final firstImage = attraction.images.isNotEmpty ? attraction.images[0] : attraction.imageUrl ?? '';
 
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
         side: BorderSide(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withAlpha(80),
           width: 1,
         ),
       ),
@@ -208,8 +408,38 @@ class AttractionCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      if (attraction.isFeatured)
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: Colors.amber,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'FEATURED',
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      if (attraction.isFeatured) SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          attraction.category,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
                   Text(
-                    attraction['name'] ?? 'Unnamed Attraction',
+                    attraction.name,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -226,21 +456,21 @@ class AttractionCard extends StatelessWidget {
                       ),
                       SizedBox(width: 8.w),
                       Text(
-                        (attraction['rating']?.toStringAsFixed(1) ?? '0.0'),
+                        (attraction.rating?.toStringAsFixed(1) ?? '0.0'),
                         style: theme.textTheme.bodyMedium,
                       ),
                       SizedBox(width: 8.w),
                       Text(
-                        '(${attraction['reviews']?.length ?? 0} reviews)',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        attraction.price != null ? '\$${attraction.price!.toStringAsFixed(2)}' : 'Free',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: 12.h),
                   Text(
-                    attraction['about'] ?? '',
+                    attraction.description ?? '',
                     style: theme.textTheme.bodyMedium,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
